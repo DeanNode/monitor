@@ -1,0 +1,394 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>历史统计</title>
+    <link href="~/Scripts/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/Scripts/layui/layui.js"></script>
+    <script src="~/Scripts/public.js"></script>
+    <script type="text/javascript" src="~/Scripts/orgchart/js/jquery.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/orgchart/js/jquery.orgchart.js"></script>
+    <script type="text/javascript" src="~/Scripts/orgchart/js/jquery.mockjax.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/orgchart/js/smartArrayToTree.js"></script>
+    <script type="text/javascript" src="~/Scripts/orgchart/js/deepclone.js"></script>
+
+    <link rel="stylesheet" href="~/Scripts/orgchart/css/jquery.orgchart.css">
+
+    <style>
+
+        /* 取消默认箭头 不标准。官网给出的用js修改class类名方法*/
+        .edge {
+            display: none;
+        }
+
+        .item {
+        }
+
+        .orgchart .second-menu-icon-box {
+            transition: opacity .5s;
+            opacity: 0;
+            right: -5px;
+            top: -5px;
+            z-index: 2;
+            position: absolute;
+        }
+
+        .orgchart .node:hover .second-menu-icon-box {
+            opacity: 1;
+        }
+
+        .orgchart .second-menu-icon::before {
+            background-color: rgba(68, 157, 68, 0.5);
+        }
+
+        .orgchart .second-menu-icon:hover::before {
+            background-color: #449d44;
+        }
+
+        .orgchart .second-menu-icon-add {
+            color: white;
+            background-color: green;
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .orgchart .second-menu-icon-del {
+            color: white;
+            background-color: red;
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            line-height: 20px;
+            text-align: center;
+            margin-left: 2px;
+        }
+
+        .node .content {
+            display: none;
+        }
+
+        .node .title {
+            height: 40px !important;
+            line-height: 40px;
+            border-radius: 4px !important;
+        }
+
+        #chart-container {
+            position: relative;
+            display: inline-block;
+            top: 10px;
+            left: 10px;
+            width: calc(100% - 24px);
+            height:100%;
+            border: 2px dashed #aaa;
+            border-radius: 5px;
+            overflow: auto;
+            text-align: center;
+        }
+
+        .orgchart .node .title .symbol {
+            display:none;
+        }
+
+        #btn-export-hier {
+            position:fixed;
+            bottom:25px;
+            right:25px;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <div id="chart-container"></div>
+        <button id="btn-export-hier" type="button" class="layui-btn">保存</button>
+    </div>
+</body>
+</html>
+
+
+
+<script type="text/javascript">
+
+    _oc = null;//tree的实体类， 非常重要！
+    var waitIndex = 0;
+
+    $(function () {
+
+        var layer
+
+        layui.extend({
+            dtree: '../Scripts/layui_ext/dtree/dtree'   // {/}的意思即代表采用自有路径，即不跟随 base 路径
+        }).use(['layer', 'laydate', 'dtree'], function () {
+            layer = layui.layer;
+
+            queryData()
+        })
+
+        //导出
+        $('#btn-export-hier').on('click', function () {
+            submitTree()
+        });
+    });
+
+    /**
+     * 获取组织架构数据
+     * */
+    function queryData() {
+       
+        $.ajax({
+            url: "../api/webapi_base/getCombination",
+            dataType: "json",
+            method:"post",
+            beforeSend: function () {
+                waitIndex = layer.load(1);
+            },
+            success: function (result) {
+                layer.close(waitIndex);
+
+                var list = result
+                list.forEach((item) => {
+                    if (item.pid == null || item.pid == 0) {
+                        item.pid = "0"
+                    }
+                })
+                list.push({ 'id': '0', "pid": null, "departmentName": '组织架构' })
+                
+                let tree = smartArrayToTree(list)[0];
+                console.log(tree)
+
+                //生成数据
+                configChart(tree)
+            }
+        })
+    }
+
+    /**
+     * 配置组织架构树
+     */
+    function configChart(tree) {
+
+        // 初始化
+        _oc = $('#chart-container').orgchart({
+            'data': tree,//数据源
+            'nodeId': 'id',
+            'nodeTitle': 'departmentName',
+            draggable: true,
+            pan: true,//通过鼠标拖放来控制OrgChart
+            //zoom: true,//通过鼠标滚轮放大或缩放OrgChart
+            'visibleLevel': '999', // 它表示在最开始的orgchart扩展到的级别。
+            'createNode': function ($node, data) {
+                //创建控件最外围div
+                var secondMenuIconBox = $('<div>', {
+                    'class': 'second-menu-icon-box',
+                });
+                //创建“增加”按钮
+                var secondMenuIconAdd = $('<i>', {
+                    'class': 'oci second-menu-icon-add',
+                    html: "+",
+                    data: {
+                        id: data.id,
+                    },
+                    click: function (event) {
+                        //获取当前选中的节点的id
+                        var sid = $(event.target).data("id")
+                        addTreeNode(sid)
+                    }
+                });
+                //创建“删除”按钮
+                var secondMenuIconDel = $('<i>', {
+                    'class': 'oci second-menu-icon-del',
+                    html: "x",
+                    data: {
+                        id: data.id,
+                        parentId: data.pid
+                    },
+                    click: function (event) {
+                        //获取当前选中的节点的id
+                        var sid = $(event.target).data("id")
+                        removeTreeNode(sid)
+                    }
+                });
+                //按钮组div添加按钮
+                secondMenuIconBox.append(secondMenuIconAdd)
+                secondMenuIconBox.append(secondMenuIconDel)
+                //节点增加按钮组div
+                $node.append(secondMenuIconBox);
+            }
+        });
+    }
+
+    /**
+     * 组织架构增加节点
+     * */
+    function addTreeNode(pid) {
+
+        layer.open({
+            id: 1,
+            type: 1,
+            title: '请输入新的组织结构名称',
+            style: 'width:80%;height:auto;',
+            content: "<div style='display:flex;justify-content:center;'><input id='area' style='width:100%;height:45px;marigin:15px;'></input></div>",
+            btn: ['确定', '取消'],
+            yes: function (index, layero) {
+                //获取输入框里面的值
+                var closeContent = top.$("#area").val() || $("#area").val();
+
+                if (closeContent.length == 0) {
+                    alert("请输入新的组织结构名称")
+                    return
+                }
+
+                layer.close(index);
+
+                $.ajax({
+                    url: "../api/webapi_base/addElement",
+                    data: {
+                        pId: pid,
+                        departmentName:closeContent
+                    },
+                    dataType: "json",
+                    method: "post",
+                    beforeSend: function () {
+                        waitIndex = layer.load(1);
+                    },
+                    success: function (result) {
+                        layer.close(waitIndex);
+
+                        //获取新增子节点的id
+                        var nid = result.id
+                        var departmentName = result.departmentName
+
+                        if (undefined == nid || nid == null || nid.length == 0) {
+                            alert("创建失败，请重试。")
+                            return
+                        }
+
+                        //获取当前节点
+                        var node = $("#" + pid)
+
+                        //判断当前节点是否有子节点
+                        var hasChild = node.closest('tr').siblings('.nodes').find('.node').length > 0 ? true : false;
+                        //此属性表示此节点是否具有父节点、同级节点还是子节点。
+                        //relationshipValue是由三个“0/1”标识符组成的字符串。
+                        //第一个字符表示当前节点是否有父节点；
+                        //Scond字符表示当前节点是否有同级节点；
+                        //第三个字符代表当前节点是否有子节点。
+                        var rel = '100';
+
+                        if (!hasChild) {
+                            //如果没有子节点， 则增加子节点
+                            _oc.addChildren(node, [{ 'departmentName': departmentName, 'id': nid }]);
+                        } else {
+                            rel = '110';
+                            //如果有子节点， 则为子节点增加平级节点
+                            _oc.addSiblings(node.closest('tr').siblings('.nodes').find('.node:first'), [{ 'departmentName': departmentName, 'id': nid }]);
+                        }
+                        //为新增的子节点增加data-parent标识
+                        $("#" + nid).attr("data-parent", pid)
+
+                    }
+                })
+            },
+            no: function (index, layero) {
+                layer.close(index);
+            }
+        });
+
+    }
+
+    /**
+     * 组织架构删除节点
+     * */
+    function removeTreeNode(sid) {
+        
+        //获取当前节点
+        var node = $("#" + sid)
+
+        //判断当前节点是否有子节点
+        var hasChild = node.closest('tr').siblings('.nodes').find('.node').length > 0 ? true : false;
+        if (hasChild) {
+            alert("请先移除子节点")
+            return
+        }
+
+        //移除当前节点
+        _oc.removeNodes($("#" + sid));
+    }
+
+    /**
+     * 保存当前树
+     * */
+    function submitTree() {
+        if (!$('pre').length) {
+            var hierarchy = _oc.getHierarchy();
+            console.log(hierarchy)
+
+            var list = []
+
+            var block = (item, pid) => {
+                var id = item.id
+                list.push({ id: id, pId: pid })
+                var childrens = item.children
+                if (undefined != childrens && childrens != null && childrens.length > 0) {
+                    childrens.forEach((sitem) => {
+                        block(sitem, id)
+                    })
+                }
+            }
+            if (hierarchy.children) {
+                for (var i = hierarchy.children.length - 1; i >= 0; i--) {
+                    var item = hierarchy.children[i]
+                    block(item, "0")
+                }
+            }
+            
+            console.log(list)
+
+            if (list.length == 0) {
+                alert("请添加新的组织架构")
+                return
+            }
+
+            var params = {
+                "org": list,
+                xxx:"xxxx"
+            }
+            debugger
+            $.ajax({
+                url: "../api/webapi_base/submitElement",
+                data: params,
+                dataType: "json",
+                method: "post",
+                beforeSend: function (data) {
+                    waitIndex = layer.load(1);
+                    
+                },
+                success: function (result) {
+                    layer.close(waitIndex);
+                    if (result.code == 100) {
+                        alert("保存成功!")
+                    }
+                    else {
+                        alert("保存失败，请重试!")
+                    }
+
+                }
+            })
+
+           
+        }
+    }
+
+
+</script>

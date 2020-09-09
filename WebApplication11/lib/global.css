@@ -1,0 +1,23 @@
+﻿body 
+{
+    margin:5px;
+}
+
+.searchDivStyle
+{
+    padding:5px; 
+}
+.openDivStyle
+{
+    padding:10px; 
+}
+
+.Single {
+    width: 300px;
+}
+
+.mustInput {
+    font-size:18px;
+    font-weight:bold;
+    color:red;
+}

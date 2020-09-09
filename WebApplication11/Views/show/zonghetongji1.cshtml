@@ -1,0 +1,1089 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>历史监控数据</title>
+    <link href="~/Scripts/mainShow/css/css0.css" rel="stylesheet" />
+    <link href="~/Scripts/layui/css/layui.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/dtree.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/font/dtreefont.css" rel="stylesheet" />
+    <script src="~/Scripts/layui/layui.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/lib/i18n/jquery.i18n.properties.min.js"></script>
+    <script src="~/Scripts/echarts.min5.js"></script>
+    <script src="~/Scripts/public.js"></script>
+    <script src="~/Scripts/layui/xm-select.js"></script>
+    <style>
+        .showAppDiv {
+            height: 40px;
+            color: white;
+            line-height: 40px;
+            border-bottom: 1px dotted #575353;
+        }
+
+            .showAppDiv span {
+                color: #a4a4a4;
+            }
+
+        #selectUserTree_select_input_id {
+            background-color: #E8E8E8;
+        }
+
+        .dtree-select-show {
+            background-color: #E8E8E8;
+        }
+    </style>
+</head>
+<body>
+    <br />
+    <div class="canvas" style="opacity: .1">
+        <iframe frameborder="0" src="bg" style="width: 100%; height: 100%;"></iframe>
+    </div>
+    <div class="layui-form" style="width:auto;position:absolute;left:15px;border:0px solid #ff0000;text-align:left;z-index:9999999">
+        <div class="layui-form-item" style="text-align:left">
+            <label class="layui-form-label" style="color:white;width:100px;" data-lang="levelSelection">级别选择：</label>
+            <div class="layui-input-inline" style="width:200px;text-align:left">
+                <select id="selectlevel" lay-filter="selectlevel"></select>
+            </div>
+
+            <label class="layui-form-label" style="color:white;width:100px;" data-lang="employeeSelection">员工选择：</label>
+            <div class="layui-input-inline" style="width:300px;text-align:left">
+                <ul id="selectUserTree" class="dtree" data-id="0" style="background-color:#E8E8E8"></ul>
+            </div>
+
+            <label class="layui-form-label" style="color:white;width:100px;">时间段：</label>
+            <div class="layui-input-inline" style="width:200px;">
+                <input type="text" class="layui-input" id="txtDateTimeArea" style="background-color:#E8E8E8">
+            </div>
+
+            <button type="button" id="btnSearch" class="layui-btn layui-btn-primary" data-lang="select">查询</button>
+        </div>
+    </div>
+
+    <div class="mainbox" style=" margin-top:50px; ">
+        <ul class="clearfix">
+            <li style="width:33%">
+                <div class="boxall" style="height:3.2rem"><div class="alltitle" data-lang="clickComparison">当日鼠标点击对比图</div><div class="allnav" id="echart1"></div><div class="boxfoot"></div></div>
+                <div class="boxall" style="height:3.2rem"><div class="alltitle" data-lang="keyboardComparison">当日键盘输入对比图</div><div class="allnav" id="echart2"></div><div class="boxfoot"></div></div>
+
+            </li>
+            <li style="width:33%">
+                <div class="boxall" style="height:3.2rem"><div class="alltitle" data-lang="top10software">常用软件排名TOP10</div><div class="allnav" id="echart3"></div><div class="boxfoot"></div></div>
+                <div class="boxall" style="height: 3.2rem">
+                    <div class="alltitle" data-lang="comparisonAverage">平均效率对比图（动作/分钟）</div>
+                    <div class="allnav" id="echart4"></div><div class="boxfoot"></div>
+                </div>
+            </li>
+            <li style="width:33%">
+                <div class="boxall" style="height:3.2rem;">
+                    <div class="alltitle" >粘贴次数</div>
+                    <div class="allnav" style="padding:15px;text-align:left;overflow:auto;" id="echart5">
+                    </div>
+                    <div class="boxfoot"></div>
+                </div>
+                <div class="boxall" style="height:3.2rem">
+                    <div class="alltitle">复制关系排名</div>
+                    <div class="allnav" id="echart6" style="height:3rem;overflow:auto;padding-left:10px;"></div>
+                </div>
+
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>
+<script>
+    var langMap = {}; //用来保存从配置文件当中获取到的信息的json对象
+    var public_color_array = ["#27D08A", "#3092FF", "#27D08A", "#e3e31f", "#ff7400", ""];
+    $(window).load(function () {
+        $(".loading").fadeOut()
+        internationalize(function (res) {
+            langMap = res.map;
+        })
+    });
+    $(document).ready(function () {
+        var whei = $(window).width();
+        $("html").css({
+            fontSize: whei / 20
+        });
+        $(window).resize(function () {
+            var whei = $(window).width();
+            $("html").css({
+                fontSize: whei / 20
+            })
+        });
+    });
+
+    var layer, laydate, form;
+    var chart1, chart2, chart3, chart4, chart5, chart6;
+    var select_userInfo;
+    var dtree;
+    var SelTree6;
+    var public_tree_array = [];
+
+    layui.extend({
+        dtree: '../Scripts/layui_ext/dtree/dtree'   // {/}的意思即代表采用自有路径，即不跟随 base 路径
+    }).use(['layer', 'laydate', 'dtree', 'form'], function () {
+        layer = layui.layer;
+        laydate = layui.laydate;
+        dtree = layui.dtree
+        form = layui.form;
+
+        $(window).resize(function () {
+            if (chart1) {
+                chart1.resize();
+            }
+            if (chart2) {
+                chart2.resize();
+            }
+            if (chart3) {
+                chart3.resize();
+            }
+            if (chart4) {
+                chart4.resize();
+            }
+            if (chart5) {
+                chart5.resize();
+            }
+            if (chart6) {
+                chart6.resize();
+            }
+        })
+        $("body").on("click", function (event) {
+            $("div[dtree-id][dtree-select]").removeClass("layui-form-selected");
+            $("div[dtree-id][dtree-card]").removeClass("dtree-select-show layui-anim layui-anim-upbit");
+        });
+        $("body").on("click", ".layui-card", function () {
+            return false;
+        })
+        //selectlevel
+        form.on('select(selectlevel)', function (data) {
+            var level = data.value;
+            SelTree6.selectResetVal();
+            if (level == "0") {
+                var userIdArry = [];
+                $.each(public_tree_array, function (i, json) {
+                    if (json["type"] == "user") {
+                        userIdArry.push(json["id"].toString());
+                    }
+                })
+                SelTree6.cancelDisabledNodes(userIdArry);
+            }
+            else {
+                var userIdArry = [];
+                $.each(public_tree_array, function (i, json) {
+                    if (json["type"] == "user") {
+                        userIdArry.push(json["id"].toString());
+                    }
+                })
+                SelTree6.cancelDisabledNodes(userIdArry);
+                userIdArry = [];
+                $.each(public_tree_array, function (i, json) {
+                    if (json["type"] == "user" && json["mylevel"] <= level) {
+                        //userIdArray.push(json["id"].toString());
+                        userIdArry.push(json["id"].toString());
+                    }
+                })
+                SelTree6.setDisabledNodes(userIdArry);
+            }
+        });
+        //执行一个laydate实例
+        var lastDate = getCurrentAddDayYMD(-3);
+        var curDate = getCurrentAddDayYMD(1);
+        laydate.render({
+            elem: '#txtDateTimeArea' //指定元素
+            , range: "~"
+            , max: 0
+            , value: lastDate + " ~ " + curDate
+            , done: function (value, date, endDate) {
+                //console.log(value); //得到日期生成的值，如：2017-08-18
+                //console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+                //console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+            }
+        });
+
+        var waitIndex = 0;
+        $.ajax({
+            url: "../api/data2020/getUserTree",
+            dataType: "json",
+            beforeSend: function () {
+                waitIndex = layer.load(1);
+            },
+            success: function (dt) {
+                layer.close(waitIndex);
+                public_tree_array = dt;//这里进行赋值
+                SelTree6 = dtree.renderSelect({
+                    elem: "#selectUserTree",
+                    width: "100%", // 指定树的宽度
+                    menubar: true,
+                    menubarTips: {
+                        group: ["moveDown", "moveUp", "refresh"]
+                    },
+                    data: dt, // 使用data加载
+                    selectTips: langMap.employeeSelectionPlay,
+                    dataFormat: "list",  //配置data的风格为list
+                    checkbarType: "p-casc",
+                    checkbar: true, //开启复选框
+                    done: function (res, $ul, first) {
+                        if (first) {
+                            //这里进行处理
+                            //console.log("树装载完成");
+                            //$(".dtree-nav-div").attr("dtree-click", "");
+                            //$(".t-click ").on("click", function () {
+                            //    console.log($(this).attr("data-id"));
+                            //});
+                        }
+                    }
+                });
+                dtree.on("chooseDone('selectUserTree')", function (parms) {                    
+                    var iCount = 0;
+                    $.each(parms.checkbarParams, function (i, json) {
+                        var nodeId = json["nodeId"];
+                        if (nodeId && nodeId.length > 1) {
+
+                            if (nodeId.substring(0, 1) == "U") {
+                                iCount++;
+                            }
+                        }
+                    })
+                    if (iCount > 0) {
+                        $("#selectUserTree_select_input_id").val("共选择【" + iCount + "】位员工");
+                    }
+                    else {
+                        $("#selectUserTree_select_input_id").val(langMap.employeeSelectionPlay);
+                    }
+
+                });
+                dtree.on("changeSelect('selectUserTree')", function (obj) {
+                    //console.log(obj.show); // 下拉树面板是否展开
+                    //console.log(obj.param); // 点击下拉树选中的参数集
+                    var select_nodeIdStr = obj.param.selectUserTree_select_nodeId;
+                    if (select_nodeIdStr) {
+                        var iCount = 0;
+                        var vArray = select_nodeIdStr.split(',');
+                        $.each(vArray, function (i, json) {
+                            var nodeId = vArray[i];
+                            if (nodeId && nodeId.length > 1) {
+
+                                if (nodeId.substring(0, 1) == "U") {
+                                    iCount++;
+                                }
+                            }
+                        });
+                        if (iCount > 0) {
+                            $("#selectUserTree_select_input_id").val("共选择【" + iCount + "】位员工");
+                        }
+                        else {
+                            $("#selectUserTree_select_input_id").val(langMap.employeeSelectionPlay);
+                        }
+                    }
+
+                });
+            }
+        })
+
+        //这里进行装载
+        var index = 0;
+        $.ajax({
+            url: "../api/data2020/commonSql",
+            beforeSend: function () { index = layer.load(2); },
+            data: {
+                tableName: "tb_depLevel"
+            },
+            dataType: "json",
+            success: function (dataArray) {
+                var html = "";
+                $.each(dataArray, function (i, json) {
+                    html += "<option value='" + json["level"] + "'>" + json["levelName"] + "</option>";
+                })
+                $("#selectlevel").html(html);
+                form.render("select");
+            }
+        })
+
+
+        //var myVar = window.setInterval(allInit, 10000, userIdList,groupByModel);
+
+        $("#btnSearch").click(function () {
+
+            var level = $("#selectlevel").val();
+
+            userIdList = getTreeUserIdList();
+            //alert(userIdList);
+            if (userIdList == "") {
+                layer.alert(langMap.employeeSelectionPlay);
+                return;
+            }
+            var txtDateTimeArea = $("#txtDateTimeArea").val();
+            if (!txtDateTimeArea) {
+                layer.alert(langMap.querytime);
+                return;
+            }
+            var vArray = txtDateTimeArea.split('~');
+            var beginDt = vArray[0];
+            var endDt = vArray[1];
+
+            allInit(level, userIdList, beginDt, endDt);
+            //clearInterval(myVar);
+        })
+        var bodyHeight = $("body").height();
+        $(".boxall").height((bodyHeight - 20) / 2);
+    })
+
+    function getTreeUserIdList() {
+        var userIdList = "";
+        var param = dtree.getCheckbarNodesParam("selectUserTree");
+        if (param.length > 0) {
+            $.each(param, function (i, obj) {
+                var id = obj["nodeId"].toString();
+                if (id.substring(0, 1) == "U") {
+                    if (userIdList == "") {
+                        userIdList = id.substring(1);
+                    }
+                    else {
+                        userIdList += "," + id.substring(1);
+                    }
+                }
+            })
+        }
+        return userIdList;
+    }
+    function allInit(level, userIdList,beginDt,endDt) {
+        上左1(level, userIdList, beginDt, endDt);
+        上中(level, userIdList, beginDt, endDt);
+        下中(level, userIdList, beginDt, endDt);
+        下左1(level, userIdList, beginDt, endDt);
+        下右(level, userIdList, beginDt, endDt);
+        上右(level, userIdList, beginDt, endDt);
+    }
+    ///对字符串进行分段
+    function splitStr(value) {
+        var ret = "";//拼接加\n返回的类目项
+        var maxLength = 3;//每项显示文字个数
+        var valLength = value.length;//X轴类目项的文字个数
+        var rowN = Math.ceil(valLength / maxLength); //类目项需要换行的行数
+        if (rowN > 1)//如果类目项的文字大于3,
+        {
+            for (var i = 0; i < rowN; i++) {
+                var temp = "";//每次截取的字符串
+                var start = i * maxLength;//开始截取的位置
+                var end = start + maxLength;//结束截取的位置
+                //这里也可以加一个是否是最后一行的判断，但是不加也没有影响，那就不加吧
+                temp = value.substring(start, end) + "\n";
+                ret += temp; //凭借最终的字符串
+            }
+            return ret;
+        }
+        else {
+            return value;
+        }
+    }
+
+    function 上左1(level, userIdList,beginDt,endDt) {
+        chart1 = echarts.init(document.getElementById("echart1"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b} <br/>' + langMap.clickSecond
+                //formatter: '{b} <br/>' + langMap.clickSecond+'{c}' + langMap.second
+            },
+            grid: {
+                left: "70px",
+                top: "35px",
+                right: "75px",
+                bottom: "10%",
+            },
+
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 0,
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMap.averageValue }
+                        ]
+                    }
+                }
+
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getMouseTotalByTime",
+            data: {
+                "userIdList": userIdList,
+                "level": level,
+                "timeBegin": beginDt,
+                "timeEnd": endDt
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+                    xAxisData.push(obj["departmentName"]);
+                    seriesData.push(obj["leftCount"]);
+                });
+
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+
+                chart1.clear();
+                chart1.setOption(option);
+
+            }
+        })
+    }
+    function 上中(level, userIdList, beginDt, endDt) {
+        chart2 = echarts.init(document.getElementById("echart3"));
+        var option = {
+            color: public_color_array,
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b} <br/>' + langMap.usageTime
+                //formatter: '{b} <br/>使用{c}分钟'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 15,
+                data: [],
+                textStyle: {
+                    color: "#dcdcdd"
+                }
+            },
+            series: [
+                {
+                    name: langMap.timeShare,
+                    type: 'pie',
+                    radius: ['50%', '70%'],
+                    avoidLabelOverlap: false,
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '30',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: [
+
+                    ]
+                }
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getAppCharts",
+            data: {
+                "userIdList": userIdList,
+                "timeBegin": beginDt,
+                "timeEnd": endDt
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+
+                var legendData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+
+                    legendData.push("[" + (i + 1) + "]" + obj["appName"]);
+                    seriesData.push({
+                        value: parseFloat(obj["usedSeconds"]/ 60.00).toFixed(2), name: "[" + (i + 1) + "]" + obj["appName"]
+                    });
+                });
+
+                option.legend.data = legendData;
+                option.series[0].data = seriesData;
+
+                chart2.clear();
+                chart2.setOption(option);
+            }
+        })
+    }
+    function 上右(level, userIdList, beginDt, endDt) {
+
+        chart5 = echarts.init(document.getElementById("echart5"));
+        var option = {
+            color: public_color_array[4],
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{c0}' + langMap.second
+
+            },
+            legend: {
+                data: [],
+                textStyle: {
+                    color: "#dcdcdd"
+                }
+            },
+            grid: {
+                left: "12%",
+                top: "35px",
+                right: "10%",
+                bottom: "15%",
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: '{value}' + langMap.second
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMap.averageValue }
+                        ]
+                    }
+                }
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getPasteTotalByTime",
+            data: {
+                userIdList: userIdList,
+                level: level,
+                timeBegin: beginDt,
+                timeEnd: endDt,
+            },
+            beforeSend: function () { chart5.showLoading(langMap.loading); },
+            dataType: "json",
+            success: function (dataArray) {
+                chart5.hideLoading();
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+                    xAxisData.push(obj["departmentName"]);
+                    seriesData.push(obj["pasteCount"]);
+                });
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+                chart5.clear();
+                chart5.setOption(option);
+            }
+        })
+    }
+
+    function 下左1(level, userIdList, beginDt, endDt) {
+        chart4 = echarts.init(document.getElementById("echart2"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b} <br/>' + langMap.keboard + '{c}' +langMap.second
+            },
+            grid: {
+                left: "70px",
+                top: "35px",
+                right: "75px",
+                bottom: "10%",
+            },
+            color: public_color_array[1],
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 0,
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMap.averageValue }
+                        ]
+                    },
+
+                }
+
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getKeyboardTotalByTime",
+            data: {
+                "userIdList": userIdList,
+                "level": level,
+                "timeBegin": beginDt,
+                "timeEnd": endDt
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+                    xAxisData.push(obj["departmentName"]);
+                    seriesData.push(obj["keyboardCount"]);
+                });
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+                chart4.clear();
+                chart4.setOption(option);
+            }
+        })
+    }
+    function 下中(level, userIdList, beginDt, endDt) {
+        echart4 = echarts.init(document.getElementById("echart4"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b} <br/>' + langMap.clickSecond
+                //formatter: '{b} <br/>点击：{c}次'
+            },
+            grid: {
+                left: "70px",
+                top: "35px",
+                right: "75px",
+                bottom: "10%",
+            },
+
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 0,
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMap.averageValue }
+                        ]
+                    }
+                }
+
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getEfficiencyGroupByHour",
+            data: {
+                "userIdList": userIdList,
+                "level": level,
+                "timeBegin": beginDt,
+                "timeEnd": endDt
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+
+                    xAxisData.push(obj["departmentName"]);
+                    seriesData.push(obj["efficiency"]);
+                });
+
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+
+                echart4.clear();
+                echart4.setOption(option);
+
+            }
+        })
+    }
+
+    function 下右(level, userIdList, beginDt, endDt) {
+        chart6 = echarts.init(document.getElementById("echart6"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b} <br/>' + langMap.clickSecond
+                //formatter: '{b} <br/>点击：{c}次'
+            },
+            grid: {
+                left: "70px",
+                top: "35px",
+                right: "75px",
+                bottom: "10%",
+            },
+
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 0,
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMap.averageValue }
+                        ]
+                    }
+                }
+
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getContentRely",
+            data: {
+                "userIdList": userIdList,
+                "top": 10,
+                "timeBegin": beginDt,
+                "timeEnd": endDt
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                var html = '<ul class="layui-timeline">';
+                $.each(dataArray, function (i, json) {
+                    html += '<li class="layui-timeline-item">';
+                    html += ' <i class="layui-icon layui-timeline-axis">&#xe641;</i>';
+                    html += '<div class="layui-timeline-content layui-text">';
+                    html += '<h3 class="layui-timeline-title" style="color:#E8E8E8">NO.' + (i + 1) + ' <i class="layui-icon layui-icon-share" style=" color: #E8E8E8;"></i>' + json["totalCount"] + '次</h3>';
+                    html += '<p style="color:#c3c3c3">';
+                    html += '<i class="layui-icon layui-icon-star-fill" style=" color: #E8E8E8;"></i>' + json["copyFrom"];
+                    html += '<br><i class="layui-icon layui-icon-triangle-r" style=" color: #E8E8E8;"></i>' + json["copyTo"];
+                    html += '</p></div></li>';
+                })
+                html += ' </ul>';
+                $("#echart6").html(html);
+            }
+        })
+    }
+
+</script>

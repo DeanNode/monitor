@@ -1,0 +1,27 @@
+.map_search_container {
+    z-index: 1;
+    position: absolute;
+    left: 80px;
+    top: 10px;
+}
+
+    .map_search_container .r-result {
+
+    }
+
+    .map_search_container .searchResultPanel {
+        border: 1px solid #C0C0C0;
+        width: 200px;
+        height: auto;
+        display: none;
+    }
+
+    .map_search_container #suggestId {
+        height:22px;
+        line-height:22px;
+        padding-left:10px;
+    }
+
+    .map_search_container #r-result {
+        width: 100%;
+    }

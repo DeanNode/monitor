@@ -1,0 +1,743 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>变化趋势分析</title>
+    <link href="~/Scripts/mainShow/css/css0.css" rel="stylesheet" />
+    <link href="~/Scripts/layui/css/layui.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/dtree.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/font/dtreefont.css" rel="stylesheet" />
+    <script src="~/Scripts/layui/layui.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/echarts.min5.js"></script>
+    <script src="~/Scripts/public.js?r=2.0"></script>
+    <script src="~/Scripts/layui/xm-select.js"></script>
+    <script language="JavaScript" src="~/lib/i18n/jquery.i18n.properties.min.js"></script>
+    <style>
+        .showAppDiv {
+            height: 40px;
+            color: white;
+            line-height: 40px;
+            border-bottom: 1px dotted #575353;
+        }
+        .showAppDiv span {
+            color: #a4a4a4;
+        }
+        #selectUserTree_select_input_id {
+            background-color: #E8E8E8;
+        }
+        .dtree-select-show {
+            background-color: #E8E8E8;
+        }
+    </style>
+</head>
+<body>
+    <br />
+    <div class="canvas" style="opacity: .1;z-index:1">
+        <iframe frameborder="0" src="bg" style="width: 100%; height: 100%;"></iframe>
+    </div>
+    <div class="layui-form" style="width:auto;position:absolute;left:15px;border:0px solid #ff0000;text-align:left;z-index:9999999">
+        <div class="layui-form-item" style="text-align:left">
+            <label class="layui-form-label" style="color:white;width:100px;" data-lang="selectStaff">员工选择：</label>
+            <div class="layui-input-inline" style="width:300px;text-align:left">
+                <ul id="selectUserTree" class="dtree" data-id="0" style="background-color:#E8E8E8"></ul>
+            </div>
+            <label class="layui-form-label" style="color:white;width:100px;">模式选择：</label>
+            <div class="layui-input-inline" style="width:200px;text-align:left">
+                <select name="groupByModel">
+                    <option value="mouse" data-lang="mouse">鼠标</option>
+                    <option value="keyboard" data-lang="keyboard">键盘</option>
+                    <option value="nongdu">平均效率</option>
+                    <option value="softUsed">软件使用占比</option>
+                    <option value="fileUsed">文件使用占比</option>
+                    <option value="gzlbhqs">工作量变化趋势</option>
+                    <option value="fzztgx">复制粘贴关系排行</option>
+                </select>
+            </div>
+            <label class="layui-form-label" style="color:white;width:100px;">时间段：</label>
+            <div class="layui-input-inline" style="width:200px;">
+                <input type="text" class="layui-input" id="txtDateTimeArea" style="background-color:#E8E8E8">
+            </div>
+            <button type="button" id="btnSearch" class="layui-btn layui-btn-primary">分析</button>
+        </div>
+    </div>
+    <div class="mainbox" style=" margin-top:50px;">
+        <ul class="clearfix">
+            <li style="width:100%">
+                <div class="boxall" style="">
+                    <div class="alltitle" data-lang="changeTrendAnalysis">变化趋势分析</div>
+                    <div class="allnav" id="echart1"></div>
+                    <div class="allnav" id="echart2" style="display:none;height:600px;overflow:auto;"></div>
+                    <div class="boxfoot"></div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
+<script>
+    $(function () {
+        
+    })
+    var public_color_array = ["#27D08A", "#3092FF", "#27D08A", "#e3e31f", "#ff7400", ""];
+    $(window).load(function () {
+        $(".loading").fadeOut()
+        internationalize();
+    });
+    $(document).ready(function () {
+        var whei = $(window).width();
+        $("html").css({
+            fontSize: whei / 20
+        });
+        $(window).resize(function () {
+            var whei = $(window).width();
+            $("html").css({
+                fontSize: whei / 20
+            })
+        });
+        var bodyHeight = document.documentElement.clientHeight;
+        $(".boxall").height((bodyHeight - 150));
+    });
+    var layer, laydate;
+    var chart1;
+    var public_select_userInfo = "";//公共选中的数据
+    var dtree, form;
+    layui.extend({
+        dtree: '../Scripts/layui_ext/dtree/dtree'   // {/}的意思即代表采用自有路径，即不跟随 base 路径
+    }).use(['layer', 'laydate', 'dtree', 'form'], function () {
+        layer = layui.layer;
+        laydate = layui.laydate;
+        dtree = layui.dtree
+        form = layui.form;
+        $(window).resize(function () {
+            if (chart1) {
+                chart1.resize();
+            }
+        })
+        //执行一个laydate实例
+        var lastDate = getCurrentAddDayYMD(-7);
+        var curDate = getCurrentAddDayYMD(0);
+        laydate.render({
+            elem: '#txtDateTimeArea' //指定元素
+            , range: "~"
+            , value: lastDate+" ~ "+curDate
+            , done: function (value, date, endDate) {
+                //console.log(value); //得到日期生成的值，如：2017-08-18
+                //console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+                //console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+            }
+        });
+        var waitIndex = 0;
+        $.ajax({
+            url: "../api/data2020/getUserTree",
+            dataType: "json",
+            beforeSend: function () {
+                waitIndex = layer.load(1);
+            },
+            success: function (dt) {
+                layer.close(waitIndex);
+                //console.log(JSON.stringify(dt));
+                public_tree_array = dt;//这里进行赋值
+                SelTree6 = dtree.renderSelect({
+                    elem: "#selectUserTree",
+                    width: "100%", // 指定树的宽度
+                    menubar: true,
+                    menubarTips: {
+                        group: ["moveDown", "moveUp", "refresh","searchNode"]
+                    },
+                    data: dt, // 使用data加载
+                    selectTips: langMaps.selectContrast,
+                    dataFormat: "list",  //配置data的风格为list
+                    checkbarType: "p-casc",
+                    checkbar: false, //开启复选框
+                    done: function (res, $ul, first) {
+                        if (first) {
+                            //这里进行处理
+                            //console.log("树装载完成");
+                            //$(".dtree-nav-div").attr("dtree-click", "");
+                            //$(".t-click ").on("click", function () {
+                            //    console.log($(this).attr("data-id"));
+                            //});
+                            //然后把所有非用户的限定不可选择
+                            var userIdArry = [];
+                            $.each(public_tree_array, function (i, json) {
+                                if (json["type"] != "user") {
+                                    userIdArry.push(json["id"].toString());
+                                }
+                            })
+                            SelTree6.setDisabledNodes(userIdArry);
+                        }
+                    }
+                });
+            }
+        });
+        $("#btnSearch").click(function () {
+            //layer.msg($("#txtDateTimeArea").val());
+            //alert($("#txtDateTimeArea").val());
+            var param = dtree.getNowParam(SelTree6);
+            if (JSON.stringify(param) == "{}") {
+                layer.alert(langMaps.selectContrast);
+                return;
+            }
+            var userIdList = param["nodeId"];
+            if (userIdList == "") {
+                layer.alert(langMaps.selectContrast);
+                return;
+            }
+            userIdList = userIdList.substring(1);//获取这个用户的id
+            var groupByModel = $("select[name='groupByModel']").val();
+            if (groupByModel == "") {
+                layer.alert("请选择模式!");
+                return;
+            }
+            var timequjian = $("#txtDateTimeArea").val();
+            if (!timequjian) {
+                layer.alert("请选择查询时间范围!");
+                return;
+            }
+            $("#echart1").show();
+            $("#echart2").hide();
+            var ModelName = "";
+            var url = "../api/webapi_baobiao/getRangeDayKeyboard";//getOneDayMouse
+            if (groupByModel == "mouse") {
+                url = "../api/webapi_baobiao/getRangeDayMouse";//getOneDayMouse
+                loadThreeTypeEchart1(userIdList, groupByModel, timequjian, url);
+            }
+            else if (groupByModel == "keyboard") {
+                url = "../api/webapi_baobiao/getRangeDayKeyboard";//getOneDayMouse
+                loadThreeTypeEchart1(userIdList, groupByModel, timequjian, url);
+            }
+            else if (groupByModel == "nongdu") {
+                url = "../api/webapi_baobiao/getRangeDayBusyState";//getOneDayMouse
+                loadThreeTypeEchart1(userIdList, groupByModel, timequjian, url);
+            }
+            else if (groupByModel == "softUsed") {
+                url = "../api/webapi_baobiao/getRangeDayApp";//getOneDayMouse
+                loadSoftUsedEchart(userIdList, groupByModel, timequjian, url);
+            }
+            else if (groupByModel == "fileUsed") {
+                url = "../api/webapi_baobiao/getRangeDayFile";//getOneDayMouse
+                loadSoftUsedEchart(userIdList, groupByModel, timequjian, url);
+            }
+            else if (groupByModel == "gzlbhqs") {
+                工作量时刻变化(userIdList, timequjian);
+            }
+            else if (groupByModel == "fzztgx") {
+                复制粘贴关系排行(userIdList, timequjian);
+            }           
+        })
+    })
+    function getTreeUserIdList() {
+        var userIdList = "";
+        var param = dtree.getCheckbarNodesParam("selectUserTree");
+        if (param.length > 0) {
+            $.each(param, function (i, obj) {
+                var id = obj["nodeId"].toString();
+                if (id.substring(0, 1) == "U") {
+                    if (userIdList == "") {
+                        userIdList = id.substring(1);
+                    }
+                    else {
+                        userIdList += "," + id.substring(1);
+                    }
+                }
+            })
+        }
+        return userIdList;
+    }
+
+    function loadThreeTypeEchart1(userIdList, groupByModel, timeRange, url) {
+        chart1 = echarts.init(document.getElementById("echart1"));
+        var option = {
+            color: public_color_array[1],
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{c0}'
+            },
+            legend: {
+                data: [],
+                textStyle: {
+                    color: "#dcdcdd"
+                }
+            },
+            grid: {
+                left: "10%",
+                top: "35px",
+                right: "10%",
+                bottom: "10%",
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: '{value}'+langMaps.date
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: '{value}'+ langMaps.second
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    label: {
+                        normal: {
+                            show: true,
+                            formatter: "{c0}" + langMaps.second
+                        }
+                    },
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMaps.averageValue }
+                        ]
+                    }
+                }
+            ]
+        };
+        if (groupByModel == "nongdu") {
+            option.yAxis.formatter = "{value}" + langMaps.secondMinute;
+            option.series[0].label.normal.formatter = "{c0}" + langMaps.secondMinute;
+        }
+        var index = 0;
+        $(".alltitle").html("[" + $("select[name='groupByModel']").find("option:selected").text() + "]变化趋势分析");
+        $.ajax({
+            type: "post",
+            url: url,
+            data: {
+                userId: userIdList,
+                timeRange: timeRange
+            },
+            beforeSend: function () {
+                index = layer.load(2);
+                chart1.showLoading(langMaps.loading);
+            },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                chart1.hideLoading();
+
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+                    xAxisData.push(obj["date"]);
+                    if (groupByModel == "nongdu") {
+                        seriesData.push(obj["Count"].toFixed(1));
+                    }
+                    else {
+                        seriesData.push(obj["Count"]);
+                    }
+                });
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+                chart1.clear();
+                chart1.setOption(option);
+            }
+        })
+    }
+    function loadSoftUsedEchart(userIdList, groupByModel, timeRange, url) {
+        chart3 = echarts.init(document.getElementById("echart1"));
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function (parms) {
+                    var html = "";
+                    $.each(parms, function (i, obj) {
+                        if (obj["data"] > 0) {
+                            html += obj["seriesName"] + ":" + obj["data"] + "分钟  <br/>"
+                        }
+                    })
+                    return html;
+                }
+            },
+            legend: {
+                data: [],
+                textStyle: {
+                    color: "#dcdcdd"
+                }
+            },
+            grid: {
+                left: "12%",
+                top: "35px",
+                right: "10%",
+                bottom: "15%",
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    //formatter: splitStr
+                    formatter: '{value}' + langMaps.date
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: '{value}分钟'
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+
+            ]
+        };
+
+        var index = 0;
+        $(".alltitle").html("[" + $("select[name='groupByModel']").find("option:selected").text() + "]细节数据分析");
+        $.ajax({
+            type: "post",
+            url: url,
+            data: {
+                userId: userIdList,
+                groupByModel: groupByModel,
+                timeRange: timeRange
+            },
+            beforeSend: function () { index = layer.load(2); chart3.showLoading(langMaps.loading); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                chart3.hideLoading();
+
+                var xAxisData = [];
+                $.each(dataArray, function (i, obj) {
+                    var isHas = false;
+                    for (var j = 0; j < xAxisData.length; j++) {
+                        if (obj["date"] == xAxisData[j]) {
+                            isHas = true;
+                            break;
+                        }
+                    }
+                    if (isHas == false) {
+                        xAxisData.push(obj["date"]);
+                    }
+
+                });
+
+                var distinctAppNameList = [];//把程序名称记录一下
+                $.each(dataArray, function (i, obj) {
+                    var isHas = false;
+                    for (var j = 0; j < distinctAppNameList.length; j++) {
+                        if (obj["appName"] == distinctAppNameList[j]) {
+                            isHas = true;
+                            break;
+                        }
+                    }
+                    if (isHas == false) {
+                        distinctAppNameList.push(obj["appName"]);
+                    }
+
+                });
+                var seriesData = [];
+                for (var i = 0; i < distinctAppNameList.length; i++) {
+                    var appName = distinctAppNameList[i];
+                    var json = {};
+                    json.name = appName;
+                    json.type = "bar";
+                    json.stack = "myBar";
+                    json.data = [];
+                    for (var j = 0; j < xAxisData.length; j++) {
+                        var userName = xAxisData[j];
+                        var value = 0;
+                        for (var x = 0; x < dataArray.length; x++) {
+                            if (dataArray[x]["appName"] == appName && dataArray[x]["date"] == userName) {
+                                //value = (dataArray[x]["usedSeconds"] * 1.0 / 60).toFixed(1);//用的分钟
+                                //value = (dataArray[x]["Count"]).toFixed(1);//用的分钟
+                                value = (dataArray[x]["Count"] * 1.0 / 60).toFixed(1);//用的分钟
+                                break;
+                            }
+                        }
+                        json.data.push(value);
+                    }
+                    seriesData.push(json);
+                }
+                //console.log(JSON.stringify(seriesData));
+                option.xAxis.data = xAxisData;
+                option.series = seriesData;
+                chart3.clear();
+                chart3.setOption(option);
+            }
+        })
+    }
+    ///对字符串进行分段
+    function splitStr(value) {
+        var ret = "";//拼接加\n返回的类目项  
+        var maxLength = 3;//每项显示文字个数  
+        var valLength = value.length;//X轴类目项的文字个数  
+        var rowN = Math.ceil(valLength / maxLength); //类目项需要换行的行数  
+        if (rowN > 1)//如果类目项的文字大于3,  
+        {
+            for (var i = 0; i < rowN; i++) {
+                var temp = "";//每次截取的字符串  
+                var start = i * maxLength;//开始截取的位置  
+                var end = start + maxLength;//结束截取的位置  
+                //这里也可以加一个是否是最后一行的判断，但是不加也没有影响，那就不加吧  
+                temp = value.substring(start, end) + "\n";
+                ret += temp; //凭借最终的字符串  
+            }
+            return ret;
+        }
+        else {
+            return value;
+        }
+    }
+
+
+    //这里是新增的一种方式
+    function 工作量时刻变化(userIdList, timeRange) {
+        $(".alltitle").html("[" + $("select[name='groupByModel']").find("option:selected").text() + "]");
+        var echart4 = echarts.init(document.getElementById("echart1"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+            },
+            grid: {
+                left: "70px",
+                top: "35px",
+                right: "75px",
+                bottom: "10%",
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 45
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: langMaps.averageValue }
+                        ]
+                    }
+                }
+            ]
+        };
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getRangeDayWorkloadState",
+            data: {
+                "userId": userIdList,
+                "timeRange": timeRange
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+                    xAxisData.push(obj["date"]);
+                    seriesData.push(obj["Count"]);
+                });
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+                echart4.clear();
+                echart4.setOption(option);
+            }
+        })
+    }
+    function 复制粘贴关系排行(userIdList, timeRange) {
+        var timeArray = timeRange.split('~');
+        var beginDt = timeArray[0];
+        var endDt = timeArray[1];
+        $(".alltitle").html("[" + $("select[name='groupByModel']").find("option:selected").text() + "]");
+        $("#echart1").hide();
+        $("#echart2").show();
+        var index = 0;
+        $.ajax({
+            type: "post",
+            url: "../api/webapi_baobiao/getContentRely",
+            data: {
+                "userIdList": userIdList,
+                "top": 10,
+                "timeBegin": beginDt,
+                "timeEnd": getDayAddDayYMD(endDt, 1)
+            },
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                var html = '<ul class="layui-timeline">';
+                $.each(dataArray, function (i, json) {
+                    html += '<li class="layui-timeline-item">';
+                    html += ' <i class="layui-icon layui-timeline-axis">&#xe641;</i>';
+                    html += '<div class="layui-timeline-content layui-text">';
+                    html += '<h3 class="layui-timeline-title" style="color:#E8E8E8">NO.' + (i + 1) + ' <i class="layui-icon layui-icon-share" style=" color: #E8E8E8;"></i>' + json["totalCount"] + langMaps.second+ '</h3>';
+                    html += '<p style="color:#c3c3c3">';
+                    html += '<i class="layui-icon layui-icon-star-fill" style=" color: #E8E8E8;"></i>' + json["copyFrom"];
+                    html += '<br><i class="layui-icon layui-icon-triangle-r" style=" color: #E8E8E8;"></i>' + json["copyTo"];
+                    html += '</p></div></li>';
+                })
+                html += ' </ul>';
+                $("#echart2").html(html);
+            }
+        })
+    }
+</script>

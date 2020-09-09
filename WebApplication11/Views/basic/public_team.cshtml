@@ -1,0 +1,621 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>小队维护界面</title>
+    <link href="~/lib/global.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+    <script src="~/Scripts/public.js"></script>
+    <script src="~/Scripts/jquery.fileDownload.js"></script>
+</head>
+<body>
+    <div class="layui-container" style="background-color:#ffffff;width:inherit;height:inherit">
+        <!--这里是配置前面查询条件begin-->
+        <blockquote class="layui-elem-quote layui-form searchDivStyle" style="height:35px;">
+            <div class="layui-form-item">
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">所属公司</label>
+                    <div class="layui-input-inline-short">
+                        <select name="zgsId" lay-filter="zgsId"></select>
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">所属分公司</label>
+                    <div class="layui-input-inline-short">
+                        <select name="fgsId" lay-filter="fgsId"></select>
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">所属部门</label>
+                    <div class="layui-input-inline-short">
+                        <select name="departmentId"></select>
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">小队名称</label>
+                    <div class="layui-input-inline-short">
+                        <input type="text" name="teamName" maxlength="20" placeholder="小队名称" autocomplete="off" class="layui-input" op="like" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <div class="layui-input-inline">
+                        <div type="button" id="btnSearch" class="layui-btn layui-btn-normal" onclick="searchDb()">查询</div>
+                    </div>
+                </div>
+            </div>
+        </blockquote>
+        <!--这里是配置前面查询条件end-->
+        <table class="layui-hide" id="mainTable" lay-filter="mainTable"></table>
+        <!--这里是配置表格end-->
+        <!--这里保持预留项目的begin-->
+        <form id="form1" runat="server">
+            <div>
+            </div>
+        </form>
+        <!--这里保持预留项目的end-->
+    </div>
+</body>
+</html>
+<!--这里是弹出框的begin-->
+<div id="open_1_Div" style="display:none" class="openDivStyle">
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <div class="layui-inline" style="display:none">
+                <label class="layui-form-label">小队id</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="teamId" placeholder="小队id" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">所属部门<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="belongsId" placeholder="部门选择" style="display:none" autocomplete="off" class="layui-input " isNeed="1" />
+                    <input type="text" name="belongsText" placeholder="请选择部门" readonly autocomplete="off" class="layui-input " isSumit="0" />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">小队名称<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="teamName" maxlength="25" placeholder="小队名称" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">排序序号<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="number" class="layui-input " onafterpaste="inputInteger(this.value)" name="orderNum" lay-filter="orderNum" lay-search="" isNeed="1" />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block Single">
+                    <textarea name="remarks" placeholder="请输入内容" maxlength="250" class="layui-textarea"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--这里是弹出框的end-->
+
+<!--这里是弹出框2的begin-->
+<div id="open_2_div" style="display:none" class="openDivStyle">
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属公司</label>
+            <div class="layui-input-block">
+                <select name="select_zgs" lay-filter="select_zgs"></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属分公司</label>
+            <div class="layui-input-block">
+                <select name="select_fgs" lay-filter="select_fgs"></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属部门</label>
+            <div class="layui-input-block">
+                <select name="select_department"></select>
+            </div>
+        </div>
+    </div>
+</div>
+<!--这里是弹出框2的end-->
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" onclick="add()">新增</button>
+        <button class="layui-btn layui-btn-warm layui-btn-sm" onclick="edit()">编辑</button>
+        <button class="layui-btn layui-btn-danger layui-btn-sm" onclick="del()">删除</button>
+        <button class="layui-btn layui-btn-normal layui-btn-sm" onclick="exportMethod()">导出</button>
+    </div>
+</script>
+
+<script type="text/javascript">
+
+    var gridColumnArray = [ //表头
+        { checkbox: true, field: "", title: "" }
+        , { field: 'zgsName', title: '公司名称', width: 260 }
+        , { field: 'fgsName', title: '分公司名称', width: 260 }
+        , { field: 'departmentName', title: '部门名称', width: 260 }
+        , { field: 'teamName', title: '小组名称', width: 260 }
+        , { field: 'orderNum', title: '排序', width: 120 }
+        , { field: 'remarks', title: '备注' }
+        , { field: 'createName', title: '创建人', hide: true}
+        , { field: 'createDate', title: '创建时间', hide: true }
+        , { field: 'updateName', title: '修改人', hide: true}
+        , { field: 'updateDate', title: '修改时间', hide: true }
+    ];
+
+    var public_firstOpen = true;
+
+    var layer, form, table, $, laydate;
+    layui.use(['layer', 'form', 'table', 'laydate'], function () {
+        layer = layui.layer;
+        form = layui.form;
+        table = layui.table;
+        laydate = layui.laydate;
+        $ = layui.$;
+        //这里进行装载数据
+        initForm();
+
+
+        $("input[name='belongsText']").click(function () {
+            if (public_firstOpen) {
+
+                initSelectForm();
+                public_firstOpen = false;
+            }
+            openASelectForm("#open_2_div", "请选择部门", function (index) {
+
+                var vObj = $("#open_2_div select[name='select_department']");//得到对象
+                if (vObj.val() == "") {
+                    layer.msg("请选择一个部门");
+                }
+                else {
+                    //进行赋值
+                    $("#open_1_Div input[name='belongsId']").val(vObj.val());
+                    var addr = $("#open_2_div select[name='select_zgs']").find('option:selected').text()
+                        + "/" + $("#open_2_div select[name='select_fgs']").find('option:selected').text();
+                        + "/" + $("#open_2_div select[name='select_department']").find('option:selected').text();
+                    $("#open_1_Div input[name='belongsText']").val(addr);
+                    layer.close(index);
+                }
+            });
+        })
+    })
+
+    //这里初始化界面
+    function initForm() {
+        //初始化
+        ajaxMethod("../api/webapiMain/getSelectItem?tableName=public_zgs&checkDataRole=0", function (JsonArray) {
+            loadingFormSelect($("select[name='zgsId']"), JsonArray, "zgsId", "zgsName");
+            form.render('select'); //刷新select选择框渲染
+        })
+
+        //监听总公司下拉 加载分公司下拉
+        if (form) {
+            form.on('select(zgsId)', function (data) {
+
+                if (data.value) {
+                    //这里装载
+                    var passData = {
+                        tableName: "public_fgs",
+                        fieldKey: "belongsId",
+                        fieldValue: data.value,
+                        checkDataRole: "1"
+                    };
+
+
+                    // 装载查询项的数据
+                    ajaxMethodWithPassData("../api/webapiMain/getSelectItem", passData, function (JsonArray) {
+                        if (JsonArray.length == 0) {
+                            var html = "<option value=''>请选择</option>";
+                            $(".searchDivStyle select[name='fgsId']").html(html);
+                            return;
+                        }
+                        loadingFormSelect($(".searchDivStyle select[name='fgsId']"), JsonArray, "fgsId", "fgsName");
+                        form.render('select'); //刷新select选择框渲染
+                    })
+                }
+                else {
+                    //这里清空
+                    var html = "<option value=''>请选择</option>";
+                    $(".searchDivStyle select[name='fgsId']").html(html);
+                }
+                form.render('select'); //刷新select选择框渲染
+            });
+        }
+        //监听分公司下拉 加载部门下拉
+        if (form) {
+            form.on('select(fgsId)', function (data) {
+
+                if (data.value) {
+                    //这里装载
+                    var passData = {
+                        tableName: "public_department",
+                        fieldKey: "belongsId",
+                        fieldValue: data.value,
+                        checkDataRole: "1"
+                    };
+
+
+                    // 装载查询项的数据
+                    ajaxMethodWithPassData("../api/webapiMain/getSelectItem", passData, function (JsonArray) {
+                        if (JsonArray.length == 0) {
+                            var html = "<option value=''>请选择</option>";
+                            $(".searchDivStyle select[name='departmentId']").html(html);
+                            return;
+                        }
+                        loadingFormSelect($(".searchDivStyle select[name='departmentId']"), JsonArray, "departmentId", "departmentName");
+                        form.render('select'); //刷新select选择框渲染
+                    })
+                }
+                else {
+                    //这里清空
+                    var html = "<option value=''>请选择</option>";
+                    $(".searchDivStyle select[name='departmentId']").html(html);
+                }
+                form.render('select'); //刷新select选择框渲染
+            });
+        }
+
+        form.render(); //刷新select选择框渲染
+        initGrid();
+        //这里渲染table
+        window.setTimeout(searchDb, 300);//延迟一下进行装载
+    }
+
+    //让grid先显示一下
+    function initGrid() {
+        table.render({
+            elem: '#mainTable'
+            , toolbar: "#toolbarDemo"
+            , height: 'full-130'
+            , data: []
+            , page: true //开启分页
+            , limits: [15, 30, 50, 100]
+            , limit: 15 //每页默认显示的数量
+            , cols: [gridColumnArray]
+        });
+    }
+
+    ///初始一下
+    function initSelectForm() {
+
+        ajaxMethod("../api/webapiMain/getSelectItem?tableName=public_zgs&checkDataRole=1", function (JsonArray) {
+            //alert(JsonArray);
+            loadingFormSelect($("#open_2_div select[name='select_zgs']"), JsonArray, "zgsId", "zgsName");
+            form.render('select'); //刷新select选择框渲染
+        })
+        //创建监听
+        if (form) {
+            form.on('select(select_zgs)', function (data) {
+                if (data.value) {
+                    //这里装载
+                    var passData = {
+                        tableName: "public_fgs",
+                        fieldKey: "belongsId",
+                        fieldValue: data.value,
+                        checkDataRole: "1"
+                    };
+                    ajaxMethodWithPassData("../api/webapiMain/getSelectItem", passData, function (JsonArray) {
+                        if (JsonArray.length == 0) {
+                            var html = "<option value=''>请选择</option>";
+                            $("#open_2_div select[name='select_fgs']").html(html);
+                            return;
+                        }
+                        loadingFormSelect($("#open_2_div select[name='select_fgs']"), JsonArray, "fgsId", "fgsName");
+                        form.render('select'); //刷新select选择框渲染
+                    });
+
+                    // 装载查询项的数据
+                    ajaxMethodWithPassData("../api/webapiMain/getSelectItem", passData, function (JsonArray) {
+                        if (JsonArray.length == 0) {
+                            var html = "<option value=''>请选择</option>";
+                            $(".searchDivStyle select[name='belongsId']").html(html);
+                            return;
+                        }
+                        loadingFormSelect($(".searchDivStyle select[name='select_fgs']"), JsonArray, "fgsId", "fgsName");
+                        form.render('select'); //刷新select选择框渲染
+                    })
+                }
+                else {
+                    //这里清空
+                    var html = "<option value=''>请选择</option>";
+                    $("#open_2_div select[name='select_fgs']").html(html);
+                }
+                form.render('select'); //刷新select选择框渲染
+            });
+        }
+        //创建监听
+        if (form) {
+            form.on('select(select_fgs)', function (data) {
+                if (data.value) {
+                    //这里装载
+                    var passData = {
+                        tableName: "public_department",
+                        fieldKey: "belongsId",
+                        fieldValue: data.value,
+                        checkDataRole: "1"
+                    };
+                    ajaxMethodWithPassData("../api/webapiMain/getSelectItem", passData, function (JsonArray) {
+                        if (JsonArray.length == 0) {
+                            var html = "<option value=''>请选择</option>";
+                            $("#open_2_div select[name='select_department']").html(html);
+                            return;
+                        }
+                        loadingFormSelect($("#open_2_div select[name='select_department']"), JsonArray, "departmentId", "departmentName");
+                        form.render('select'); //刷新select选择框渲染
+                    });
+
+                    // 装载查询项的数据
+                    ajaxMethodWithPassData("../api/webapiMain/getSelectItem", passData, function (JsonArray) {
+                        if (JsonArray.length == 0) {
+                            var html = "<option value=''>请选择</option>";
+                            $(".searchDivStyle select[name='belongsId']").html(html);
+                            return;
+                        }
+                        loadingFormSelect($(".searchDivStyle select[name='select_department']"), JsonArray, "departmentId", "departmentName");
+                        form.render('select'); //刷新select选择框渲染
+                    })
+                }
+                else {
+                    //这里清空
+                    var html = "<option value=''>请选择</option>";
+                    $("#open_2_div select[name='select_department']").html(html);
+                }
+                form.render('select'); //刷新select选择框渲染
+            });
+        }
+    }
+
+
+    function setDefaultValue() {
+        //设置默认值
+        $("input[name='orderNum']").val("1");
+    }
+
+    function searchDb() {
+        //这里获取信息
+        var divObject = $(".searchDivStyle");
+        var searchJsonArray = getJsonListSearchForm(divObject);
+        showConsoleLog(searchJsonArray);
+        var passJson = {};
+        passJson.centerSearchArray = searchJsonArray
+        ajaxMethodWithWaiting2("../api/webapi_base/getTeamList", passJson, function (JsonArray) {
+            layer.closeAll();//关闭所有的
+            table.render({
+                elem: '#mainTable'
+                , toolbar: "#toolbarDemo"
+                , height: 'full-130'
+                , data: JsonArray
+                , page: true //开启分页
+                , limits: [15, 30, 50, 100]
+                , limit: 15 //每页默认显示的数量
+                , cols: [gridColumnArray]
+            });
+        })
+    }
+
+    function add() {
+        //先清空页面
+        var divObject = $("#open_1_Div");
+        var ctrl_array = getJsonListOpenFormClearObject(divObject);
+        if (ctrl_array.length > 0) {
+            $.each(ctrl_array, function (i, obj) {
+                $(obj).val("");//进行清空
+            })
+            form.render("select");
+        }
+        setDefaultValue();
+        //这里弹出一个页面
+        confirmFormWithDivID("新增", "#open_1_Div"
+            , function (index, layero) {
+                var vJsonArray = getJsonListOpenForm(divObject);
+                showConsoleLog(vJsonArray);
+                if (vJsonArray == undefined || vJsonArray.length <= 0) {
+                    showMsg("没有获取到页面数据!")
+                    return;
+                }
+                //循环这个数组， 这里检测一下必输项是否填写
+                var msgTishi = "提示：";
+                $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                    if (json.isNeed == "1" && json.fieldValue == "") {
+                        msgTishi += "<br>" + json.placeholder + "未填写";
+                    }
+                });
+                if (msgTishi != "提示：") {
+                    showMsg(msgTishi);
+                    return;
+                }
+                //这里进行提交数据
+                var passJson = {};
+                $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                    passJson[json["fieldName"]] = json["fieldValue"];
+                });
+                showConsoleLog(vJsonArray);
+                var iWaiting = 0;
+                $.ajax({
+                    type: "post",
+                    url: "../api/webapi_base/addTeam",
+                    beforeSend: function () {
+                        iWaiting = layer.load(1);
+                    },
+                    data: passJson,
+                    success: function (data) {
+                        layer.close(iWaiting);//关闭等待的
+                        if (data.code == 100) {
+                            showMsg("添加成功！");
+                            layer.close(index);
+                            searchDb();
+                        }
+                        else {
+                            showMsg("添加失败！" + data.msg);
+                        }
+                    }
+                })
+            })
+    }
+
+    function edit() {
+        //初始化
+        //ajaxMethod("../api/webapiMain/getSelectItem?tableName=vw_personInfo&checkDataRole=1", function (JsonArray) {
+        //    loadingFormSelect($("select[name='fatherPersonId']"), JsonArray, "personId", "personName");
+        //    form.render('select'); //刷新select选择框渲染
+        //})
+
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        console.log(selectedRows);
+        if (selectedRows.length == 1) {
+            //这里进行赋值
+            var divObject = $("#open_1_Div");
+            var ctrl_array = getJsonListOpenFormClearObject(divObject);
+            if (ctrl_array.length > 0) {
+                $.each(ctrl_array, function (i, json) {
+                    var keyName = json.name;//
+                    if (i == 2) {
+                        console.log(json);
+                        console.log(selectedRows[0]['zgsName'] + "/" + selectedRows[0]['fgsName'] + "/" + selectedRows[0]['departmentName']);
+                        $(json).val(selectedRows[0]['zgsName'] + "/" + selectedRows[0]['fgsName'] + "/" + selectedRows[0]['departmentName']);
+
+                    } else if (i == 1) {
+                        $(json).val(selectedRows[0]['belongsId']);
+                    }
+                    else {
+                        $(json).val(selectedRows[0][keyName]);
+                    }
+                });
+                form.render("select");
+            }
+            //这里进行
+            confirmFormWithDivID("修改", "#open_1_Div"
+                , function (index, layero) {
+                    //alert(index);
+                    var vJsonArray = getJsonListOpenForm(divObject);
+                    showConsoleLog(vJsonArray);
+                    if (vJsonArray == undefined || vJsonArray.length <= 0) {
+                        showMsg("没有获取到页面数据!")
+                        return;
+                    }
+                    //循环这个数组， 这里检测一下必输项是否填写
+                    var msgTishi = "提示：";
+                    $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                        if (json.isNeed == "1" && json.fieldValue == "") {
+                            msgTishi += "<br>" + json.placeholder + "未填写";
+                        }
+                    });
+                    if (msgTishi != "提示：") {
+                        showMsg(msgTishi);
+                        return;
+                    }
+                    //这里进行提交数据
+                    var passJson = {};
+                    $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                        passJson[json["fieldName"]] = json["fieldValue"];
+                    });
+                    showConsoleLog(vJsonArray);
+                    var iWaiting = 0;
+                    $.ajax({
+                        type: "post",
+                        url: "../api/webapi_base/updateTeam",
+                        beforeSend: function () {
+                            iWaiting = layer.load(1);
+                        },
+                        data: passJson,
+                        success: function (data) {
+                            layer.close(iWaiting);//关闭等待的
+                            if (data.code == 100) {
+                                showMsg("更新成功！");
+                                layer.close(index);
+                                searchDb();
+                            }
+                            else {
+                                showMsg("更新失败！" + data.msg);
+                            }
+                        }
+                    })
+                })
+        }
+        else {
+            showMsg("请选择一行进行操作！");
+        }
+    }
+
+    function del() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        var iRowsLen = selectedRows.length;
+        if (iRowsLen > 0) {
+            layer.confirm('确定要删除[' + iRowsLen + ']条记录吗？', { icon: 3, title: '提示' }, function (index) {
+                var idList = "";
+                $.each(selectedRows, function (i, json) {
+                    if (idList) {
+                        idList += "," + json["teamId"];
+                    }
+                    else {
+                        idList = json["teamId"];
+                    }
+                })
+                var passJson = {};
+                passJson.teamIdList = idList;
+                ajaxMethodWithWaiting2("../api/webapi_base/deleteTeam", passJson, function (data) {
+                    if (data.code == 100) {
+                        showMsg(data.msg);
+                        searchDb();
+                    }
+                    else {
+                        showMsg(data.msg);
+                    }
+                })
+                layer.closeAll();
+                //layer.close(index);
+            });
+        }
+        else {
+            showMsg("请选择一行进行操作！");
+        }
+    }
+    function exportMethod() {
+        var iRowsLen = $("div[lay-id='mainTable'] .layui-table-body  tr").length;
+        if (iRowsLen <= 0) {
+            showMsg("请先查询出数据后才能导出！");
+            return;
+        }
+        layer.confirm('确定要导出[' + iRowsLen + ']条记录吗？', { icon: 3, title: '提示' }, function (index) {
+            layer.close(index);
+            var url = "../api/export/publicExport";
+            var passJson = {
+                keyName: "getTeam",
+                columnArray: gridColumnArray,
+                fileName: "小队信息导出"
+            };
+            $.fileDownload(url, {
+                httpMethod: 'post',
+                data: passJson,
+                prepareCallback: function (url) {
+                    showMsg("正在导出……");
+                },
+                successCallback: function (url) {
+                    showMsg("导入成功！");
+                },
+                failCallback: function (html, url) {
+                    showMsg(html);
+                }
+            });
+
+        });
+    }
+</script>

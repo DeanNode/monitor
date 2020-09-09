@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>导入页面</title>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+</head>
+<body>
+    <div style="position:absolute;right:5px;top:5px;">
+        模板下载:
+        <a href="~/Scripts/模板/公司人员信息模板.xls">公司人员信息模板</a>
+    </div>
+    <table style="width: 340px;margin:5px" border=0>
+        <tr>
+            <td style="width: 140px;">
+                &nbsp;&nbsp;点击这里进行数据上传->
+                @*<input type="button" value="execl模板" style="width:100px;height:30px" id="test1" />*@
+                <input type="button" value="execl模板" style="width:100px;height:30px" id="test2" />
+            </td>
+        </tr>
+    </table>
+    <hr />
+    @*<img src="~/Scripts/模板/上传说明.png" />*@
+    <img src="~/Scripts/模板/tipImg.png" />
+</body>
+</html>
+<script>
+    layui.use(['layer', 'upload'], function () {
+        var layer = layui.layer;
+        var upload = layui.upload;
+        var uploadInst = upload.render({
+            elem: '#test1' //绑定元素
+            , url: '../api/excelIn/upload' //上传接口
+            , exts: "xls"
+            , accept: "file"
+            , before: function () {
+                layer.load(2);
+            }, done: function (res) {
+                //上传完毕回调
+                layer.closeAll();
+                //这里进行处理
+                console.log(res);
+                layer.msg(res.msg);
+            }, error: function () {
+                //请求异常回调
+                layer.closeAll();
+            }
+        });
+        var uploadNewInst = upload.render({
+            elem: "#test2",
+            url: "../api/excelIn/modifications",
+            exts: "xls",
+            accept: "file",
+            before: function () {
+                layer.load(2);
+            }, done: function (res) {
+                layer.closeAll();
+                layer.msg(res.msg);
+            }, error: function () {
+                layer.closeAll();
+            }
+        })
+    });
+</script>

@@ -1,0 +1,83 @@
+﻿
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>数据权限用户树</title>
+    <link href="~/lib/zTree/css/zTreeStyle/zTreeStyle.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/lib/zTree/js/jquery.ztree.all-3.5.min.js"></script>
+
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+</head>
+<body>
+    <div>
+        <ul id="tree" class="ztree" style="width:260px; overflow:auto;"></ul>
+    </div>
+
+</body>
+</html>
+<script>
+
+    var setting = {
+        check: {
+            enable: false
+        },
+        data: {
+            simpleData: {
+                enable: true
+            }
+        },
+        callback: {
+            onClick: onClick
+        }
+    };
+
+    var layer;
+    layui.use(['layer'], function () {
+        layer = layui.layer;
+        //这里获取 znodes
+
+        $.ajax({
+            url: "../api/webapi_tree/getDataRoleUserTree",
+            success: function (zNodes) {
+                treeObj = $.fn.zTree.init($("#tree"), setting, zNodes);
+            }
+        })
+    })
+    function onClick(event, treeId, treeNode) {
+
+
+        if (treeNode.id.substring(0, 1) == "A") {
+            var vLen = treeNode.id.length;
+            window.parent.searchMyDataRoleData(treeNode.id.substring(1, vLen));
+        }
+        else {
+            layer.msg("请选择角色名称");
+        }
+
+    }
+
+
+    function getSelectRoleId() {
+        var roleId = "";
+        var treeObj = $.fn.zTree.getZTreeObj("tree");
+        var nodes = treeObj.getSelectedNodes();
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (node.id.substring(0, 1) == "A") {
+                if (roleId) {
+                    roleId += "," + node.id.substring(1, (node.id.length))
+                }
+                else {
+                    roleId = node.id.substring(1, (node.id.length))
+                }
+            }
+        }
+
+        return roleId;
+    }
+
+</script>

@@ -1,0 +1,199 @@
+﻿
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <meta name="description" content="particles.js is a lightweight JavaScript library for creating particles.">
+    <meta name="author" content="Vincent Garreau" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>登录界面</title>
+
+    <link href="~/Scripts/login/style_login.css" rel="stylesheet" />
+    <link href="~/Scripts/login/reset_login.css" rel="stylesheet" />
+
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+
+    <style>
+
+        .layui-form-checked[lay-skin=primary] i {
+            border-color: #144283;
+            background-color: #8bb0e4;
+            color: #fff;
+        }
+
+    </style>
+    
+</head>
+<body>
+    <div id="particles-js" style="position:relative">
+        <div class="login" >
+            <div class="login-top">
+                登录
+            </div>
+            <div class="login-center clearfix">
+                <div class="login-center-img"><img src="../Scripts/login/name.png" /></div>
+                <div class="login-center-input">
+                    <input type="text" name="" id="txtUsername" value="admin" placeholder="请输入您的用户名" onfocus="this.placeholder=''" onblur="this.placeholder='请输入您的用户名'" />
+                    <div class="login-center-input-text">用户名</div>
+                </div>
+            </div>
+            <div class="login-center clearfix">
+                <div class="login-center-img"><img src="../Scripts/login/password.png" /></div>
+                <div class="login-center-input">
+                    <input type="password" name="" id="txtPsw" value="" placeholder="请输入您的密码" onfocus="this.placeholder=''" onblur="this.placeholder='请输入您的密码'" />
+                    <div class="login-center-input-text">密码</div>
+                </div>
+            </div>
+            <div class="login-center clearfix">
+                <div class="login-center-img"><img src="../Scripts/login/password.png" /></div>
+                <div class="login-center-input">
+                    <div id="slider"></div>
+                </div>
+            </div>
+
+            <div class="login-button">
+                登录
+            </div>
+            <div style="width:100%;text-align:center;margin-top:50px;">思维能量20200817</div>
+
+            <div class="layui-form" style="position:absolute;top:313px;right:20px;">
+                <input type="checkbox" name="ckAdmin" title="管理员登录" lay-skin="primary" lay-filter="ckAdmin" >
+            </div>
+
+        </div>
+        <div class="sk-rotating-plane"></div>
+    </div>
+
+</body>
+</html>
+<script>
+    var layer,form;
+    var slider;
+    var public_isAdmin = false;
+    $(function () {
+        layui.config({
+            base: '../Scripts/layui_ext/sliderVerify/'
+        }).use(['layer', 'sliderVerify','form'], function () {
+            var sliderVerify = layui.sliderVerify;
+            layer = layui.layer;
+            form = layui.form;
+            form.on('checkbox(ckAdmin)', function (data) {
+                console.log(data.elem); //得到checkbox原始DOM对象
+                console.log(data.elem.checked); //是否被选中，true或者false
+                console.log(data.value); //复选框value值，也可以通过data.elem.value得到
+                console.log(data.othis); //得到美化后的DOM对象
+                public_isAdmin = data.elem.checked;
+            }); 
+
+
+            $("#txtUsername").focus();
+            $("#txtUsername").keydown(function (event) {
+                if (event.keyCode == 13) {
+                    $("#txtPsw").focus();
+                }
+            })
+            $("#txtPsw").keydown(function (event) {
+                if (event.keyCode == 13) {
+                    $(".login-button").click();
+                }
+            });
+
+            slider = sliderVerify.render({
+                elem: '#slider',
+                isAutoVerify: false,//关闭自动验证
+                bg: 'layui-bg-green',//自定义背景样式名
+                text: '滑动',
+                onOk: function () {//当验证通过回调
+                    //layer.msg("滑块验证通过");
+                }
+            })
+
+
+            document.querySelector(".login-button").onclick = function () {
+
+                if (slider.isOk() == false) {
+                    layer.msg("请先通过滑块验证！");
+                    return;
+                }
+
+                var vUserName = $("#txtUsername").val();
+                if (!vUserName) {
+                    layer.msg("请输入用户账号！");
+                    return;
+                }
+
+                var vPsw = $("#txtPsw").val();
+                if (!vPsw) {
+                    layer.msg("请输入用户密码！");
+                    return;
+                }
+
+                addClass(document.querySelector(".login"), "active")
+                setTimeout(function () {
+                    addClass(document.querySelector(".sk-rotating-plane"), "active")
+                    document.querySelector(".login").style.display = "none"
+
+                    loginIn(vUserName, vPsw); //开始登录
+
+                }, 800)
+            }
+        })
+        
+
+    })
+
+    function loginIn(vUserName, vPsw) {
+
+        //alert(1);
+        $.ajax({
+            url: "../api/webapiMain/login",
+            type: "post",
+            data: {
+                userName: vUserName,
+                psw: vPsw,
+                isAdmin: public_isAdmin
+            },
+            beforeSend: function () { },
+            success: function (data) {
+
+                if (data.code == 100) { 
+                    window.location = "../main/index?&r=" + Math.random();
+                }
+                else {
+                    layer.msg("账号或密码不正确，请重新输入");
+                    removeClass(document.querySelector(".login"), "active")
+                    removeClass(document.querySelector(".sk-rotating-plane"), "active")
+                    document.querySelector(".login").style.display = "block";
+                }
+            }
+        })
+    }
+
+    function hasClass(elem, cls) {
+        cls = cls || '';
+        if (cls.replace(/\s/g, '').length == 0) return false; //当cls没有参数时，返回false
+        return new RegExp(' ' + cls + ' ').test(' ' + elem.className + ' ');
+    }
+
+    function addClass(ele, cls) {
+        if (!hasClass(ele, cls)) {
+            ele.className = ele.className == '' ? cls : ele.className + ' ' + cls;
+        }
+    }
+
+    function removeClass(ele, cls) {
+        if (hasClass(ele, cls)) {
+            var newClass = ' ' + ele.className.replace(/[\t\r\n]/g, '') + ' ';
+            while (newClass.indexOf(' ' + cls + ' ') >= 0) {
+                newClass = newClass.replace(' ' + cls + ' ', ' ');
+            }
+            ele.className = newClass.replace(/^\s+|\s+$/g, '');
+        }
+    }
+
+</script>

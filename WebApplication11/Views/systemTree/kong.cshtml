@@ -1,0 +1,33 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>kong</title>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+
+</head>
+<body>
+    <div> 
+        <input type="button" onclick="test()"  value="获取数据" />
+    </div>
+</body>
+</html>
+<script>
+
+    function test() {
+        //http://localhost:15593/api/Values/1
+        $.ajax({
+            type: "get",
+            url: "http://106.13.230.73:8088/api/Values/2",
+            dataType:"json",
+            success: function (data) {
+                alert(data);
+            }
+        })
+    }
+
+</script>

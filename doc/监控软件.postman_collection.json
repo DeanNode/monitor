@@ -1,0 +1,39 @@
+{
+	"id": "f682b849-9309-4f8c-b82f-8b0cce3f23da",
+	"name": "监控软件",
+	"description": "",
+	"auth": null,
+	"events": null,
+	"variables": [],
+	"order": [
+		"c14b8231-3a9d-442f-93c3-2f58a792fd4d"
+	],
+	"folders_order": [],
+	"protocolProfileBehavior": {},
+	"folders": [],
+	"requests": [
+		{
+			"id": "c14b8231-3a9d-442f-93c3-2f58a792fd4d",
+			"name": "时间段内键盘总数",
+			"url": "http://localhost:60709/api/webapi_baobiao/getKeyboardTotalByTime",
+			"description": "",
+			"data": [],
+			"dataOptions": {
+				"raw": {
+					"language": "json"
+				}
+			},
+			"dataMode": "raw",
+			"headerData": [],
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": [],
+			"folder": null,
+			"rawModeData": "{\n\t\"userIdList\":\"12,13,14,15,17\",\n\t\"groupByModel\":\"person\",\n\t\"timeRange\":\"2020-5-7~2020-5-8\"\n}",
+			"headers": "",
+			"pathVariables": {}
+		}
+	]
+}

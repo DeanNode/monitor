@@ -1,0 +1,37 @@
+{
+  "id": "1708946",
+  "name": "1111",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "4960610",
+      "name": "设备管理",
+      "font_class": "shebeiguanli",
+      "unicode": "e684",
+      "unicode_decimal": 59012
+    },
+    {
+      "icon_id": "2767716",
+      "name": "设备",
+      "font_class": "icon-",
+      "unicode": "e64c",
+      "unicode_decimal": 58956
+    },
+    {
+      "icon_id": "4130209",
+      "name": "人",
+      "font_class": "ren",
+      "unicode": "e683",
+      "unicode_decimal": 59011
+    },
+    {
+      "icon_id": "4706393",
+      "name": "车",
+      "font_class": "che",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    }
+  ]
+}

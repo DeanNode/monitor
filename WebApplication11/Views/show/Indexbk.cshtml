@@ -1,0 +1,943 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>柱状图</title>
+    <link href="~/Scripts/mainShow/css/css0.css" rel="stylesheet" />
+    <link href="~/Scripts/layui/css/layui.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/dtree.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/font/dtreefont.css" rel="stylesheet" />
+    <script src="~/Scripts/layui/layui.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/echarts.min5.js"></script>
+    <script src="~/Scripts/public.js"></script>
+    <script src="~/Scripts/layui/xm-select.js"></script>
+    <style>
+        .showAppDiv {
+            height: 40px;
+            color: white;
+            line-height: 40px;
+            border-bottom: 1px dotted #575353;
+        }
+
+            .showAppDiv span {
+                color: #a4a4a4;
+            }
+
+        #selectUserTree_select_input_id {
+            background-color: #E8E8E8;
+        }
+
+        .dtree-select-show {
+            background-color: #E8E8E8;
+        }
+    </style>
+</head>
+<body>
+    <br />
+    <div class="canvas" style="opacity: .1">
+        <iframe frameborder="0" src="bg" style="width: 100%; height: 100%;"></iframe>
+    </div>
+    <div style="width:auto;position:absolute;right:15px;border:0px solid #ff0000;text-align:right;z-index:9999999">
+        <div class="layui-form-item" style="text-align:right">
+            <label class="layui-form-label" style="color:white;width:100px;">员工选择：</label>
+            <div class="layui-input-inline" style="width:600px;text-align:left">
+                <ul id="selectUserTree" class="dtree" data-id="0" style="background-color:#E8E8E8"></ul>
+            </div>
+            <label class="layui-form-label" style="color:white;width:100px;">时间段：</label>
+            <div class="layui-input-inline" style="width:200px;">
+                <input type="text" class="layui-input" id="txtDateTimeArea" style="background-color:#E8E8E8">
+            </div>
+            <button type="button" id="btnSearch" class="layui-btn layui-btn-primary">查询</button>
+        </div>
+    </div>
+
+    <div class="mainbox" style=" margin-top:50px; ">
+        <ul class="clearfix">
+            <li style="width:33%">
+                <div class="boxall" style="height:3.2rem"><div class="alltitle">用户当日鼠标点击对比图</div><div class="allnav" id="echart1"></div><div class="boxfoot"></div></div>
+                <div class="boxall" style="height:3.2rem"><div class="alltitle">用户当日键盘输入对比图</div><div class="allnav" id="echart2"></div><div class="boxfoot"></div></div>
+
+            </li>
+            <li style="width:33%">
+                <div class="boxall" style="height:3.2rem"><div class="alltitle">排名前十的软件使用时间</div><div class="allnav" id="echart3"></div><div class="boxfoot"></div></div>
+                <div class="boxall" style="height:3.2rem"><div class="alltitle">时刻人员书写柱状图</div><div class="allnav" id="echart4"></div><div class="boxfoot"></div></div>
+            </li>
+            <li style="width:33%">
+                <div class="boxall" style="height:3.2rem;">
+                    <div class="alltitle">当前用户使用软件展示</div>
+                    <div class="allnav" style="padding:15px;text-align:left;overflow:auto;" id="echart5">
+                    </div>
+                    <div class="boxfoot"></div>
+                </div>
+                <div class="boxall" style="height: 3.2rem">
+                <div class="alltitle">时刻人员繁忙柱状图</div>
+                <div class="allnav" id="echart6"></div><div class="boxfoot"></div></div>
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>
+<script>
+    var public_color_array = ["#27D08A", "#3092FF", "#27D08A", "#e3e31f", "#ff7400", ""];
+    $(window).load(function () {
+        $(".loading").fadeOut()
+    });
+    $(document).ready(function () {
+        var whei = $(window).width();
+        $("html").css({
+            fontSize: whei / 20
+        });
+        $(window).resize(function () {
+            var whei = $(window).width();
+            $("html").css({
+                fontSize: whei / 20
+            })
+        });
+    });
+
+    var layer, laydate;
+    var chart1, chart2, chart3, chart4, chart5, chart6;
+    var select_userInfo;
+    var dtree;
+    layui.extend({
+        dtree: '../Scripts/layui_ext/dtree/dtree'   // {/}的意思即代表采用自有路径，即不跟随 base 路径
+    }).use(['layer', 'laydate', 'dtree'], function () {
+        layer = layui.layer;
+        laydate = layui.laydate;
+        dtree = layui.dtree
+
+        $(window).resize(function () {
+            if (chart1) {
+                chart1.resize();
+            }
+            if (chart2) {
+                chart2.resize();
+            }
+            if (chart3) {
+                chart3.resize();
+            }
+            if (chart4) {
+                chart4.resize();
+            }
+            if (chart5) {
+                chart5.resize();
+            }
+            if (chart6) {
+                chart6.resize();
+            }
+        })
+        $("body").on("click", function (event) {
+            $("div[dtree-id][dtree-select]").removeClass("layui-form-selected");
+            $("div[dtree-id][dtree-card]").removeClass("dtree-select-show layui-anim layui-anim-upbit");
+        });
+
+        //执行一个laydate实例
+        var lastDate = getCurrentAddDayYMD(-7);
+        var curDate = getCurrentAddDayYMD(0);
+        laydate.render({
+            elem: '#txtDateTimeArea' //指定元素
+            , range: "~"
+            , max: 0
+            , value: lastDate + " ~ " + curDate
+            , done: function (value, date, endDate) {
+                console.log(value); //得到日期生成的值，如：2017-08-18
+                console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+                console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+            }
+        });
+
+        var waitIndex = 0;
+        $.ajax({
+            url: "../api/data/commonMethod?tableName=vw_tree_all",
+            dataType: "json",
+            beforeSend: function () {
+                waitIndex = layer.load(1);
+            },
+            success: function (dt) {
+                layer.close(waitIndex);
+                console.log(JSON.stringify(dt));
+
+                var SelTree6 = dtree.renderSelect({
+                    elem: "#selectUserTree",
+                    width: "100%", // 指定树的宽度
+                    initLevel: "4",  //默认展开层级为1
+                    data: dt, // 使用data加载
+                    selectTips: "请选择要对比的人员",
+                    dataFormat: "list",  //配置data的风格为list
+                    checkbarType: "p-casc",
+                    checkbar: true //开启复选框
+                });
+                dtree.on("chooseDone('selectUserTree')", function (parms) {
+                    //console.log(parms);
+
+                    //var userIdList = "";
+                    //$.each(parms.checkbarParams, function (i, obj) {
+                    //    var nodeId = obj["nodeId"];
+                    //    if (nodeId.substring(0, 1) == "Z") {
+                    //        if (userIdList == "") {
+                    //            userIdList = nodeId;
+                    //        }
+                    //        else {
+                    //            userIdList +=","+nodeId;
+                    //        }
+                    //    }
+                    //})
+
+                    //dtree.chooseDataInit("selectUserTree", userIdList);
+                });
+            }
+        })
+
+        $("#btnSearch").click(function () {
+            //layer.msg($("#txtDateTimeArea").val());
+            //alert($("#txtDateTimeArea").val());
+            var timequjian = $("#txtDateTimeArea").val();
+            if (!timequjian) {
+                layer.alert("请选择查询时间范围!");
+                return;
+            }
+            var userIdList = getTreeUserIdList();
+            if (userIdList == "") {
+                layer.alert("请选择要比对的人员!");
+                return;
+            }
+
+            左上1(timequjian, userIdList);
+            左下1(timequjian, userIdList);
+            右上1(timequjian, userIdList);
+            右下1(timequjian, userIdList);
+
+        })
+        var bodyHeight = $("body").height();
+        $(".boxall").height((bodyHeight - 50) / 2);
+    })
+    function getTreeUserIdList() {
+        var userIdList = "";
+        var param = dtree.getCheckbarNodesParam("selectUserTree");
+        if (param.length > 0) {
+            $.each(param, function (i, obj) {
+                var id = obj["nodeId"].toString();
+                if (id.substring(0, 1) == "U") {
+                    if (userIdList == "") {
+                        userIdList = id.substring(1);
+                    }
+                    else {
+                        userIdList += "," + id.substring(1);
+                    }
+                }
+            })
+        }
+        return userIdList;
+    } 
+
+    
+    function allInit() {
+        上左1();
+        上中();
+        下中();
+
+        下左1();
+        下右();
+        上右();
+    }
+    ///对字符串进行分段
+    function splitStr(value) {
+        var ret = "";//拼接加\n返回的类目项  
+        var maxLength = 3;//每项显示文字个数  
+        var valLength = value.length;//X轴类目项的文字个数  
+        var rowN = Math.ceil(valLength / maxLength); //类目项需要换行的行数  
+        if (rowN > 1)//如果类目项的文字大于3,  
+        {
+            for (var i = 0; i < rowN; i++) {
+                var temp = "";//每次截取的字符串  
+                var start = i * maxLength;//开始截取的位置  
+                var end = start + maxLength;//结束截取的位置  
+                //这里也可以加一个是否是最后一行的判断，但是不加也没有影响，那就不加吧  
+                temp = value.substring(start, end) + "\n";
+                ret += temp; //凭借最终的字符串  
+            }
+            return ret;
+        }
+        else {
+            return value;
+        }
+    }
+
+    function 上左1() {
+        chart1= echarts.init(document.getElementById("echart1"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b} <br/>点击：{c}次'
+            },
+            grid: {
+                left: "10%",
+                top: "35px",
+                right: "5%",
+                bottom: "20%",
+            },
+
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 0,
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: '平均值' }
+                        ]
+                    }
+                }
+                
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            url: "../api/data/get_common?tableName=vw_当日_用户类别_鼠标点击",
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+               
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+
+                    xAxisData.push(obj["userName"]);
+                    seriesData.push(obj["Count"]);
+                });
+
+
+
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+
+                chart1.clear();
+                chart1.setOption(option);
+
+            }
+        })
+    }
+    function 上中() {
+        chart2 = echarts.init(document.getElementById("echart3"));
+        var option = {
+            color: public_color_array,
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b} <br/>使用{c}分钟'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 15,
+                data: [],
+                textStyle: {
+                    color:"#dcdcdd"
+                }
+            },
+            series: [
+                {
+                    name: '时间占比',
+                    type: 'pie',
+                    radius: ['50%', '70%'],
+                    avoidLabelOverlap: false,
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '30',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: [
+                       
+                    ]
+                }
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            url: "../api/data/get_ruanjianFenbu",
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+
+                var legendData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+
+                    legendData.push("["+(i+1)+"]"+obj["appName"]);
+                    seriesData.push({
+                        value: obj["mins"], name: "[" + (i + 1) + "]" +obj["appName"]
+                    });
+                });
+
+
+
+                option.legend.data = legendData;
+                option.series[0].data = seriesData;
+
+                chart2.clear();
+                chart2.setOption(option);
+
+            }
+        })
+    }
+    //曲线图
+    function 下中() {
+        chart3= echarts.init(document.getElementById("echart4"));
+        var option = {
+           
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b}点<br/>{c}次'
+            },
+            legend: {
+                data: [],
+                textStyle: {
+                    color: "#dcdcdd"
+                }
+            },
+            grid: {
+                left: "10%",
+                top: "35px",
+                right: "5%",
+                bottom: "10%",
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: '{value} 点'
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                
+            ]
+        };
+
+
+        var index = 0;
+        $.ajax({
+            url: "../api/data/get_user_hours_keyword",
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+
+                var legendData = [];
+                var seriesData = [];
+
+               
+
+                var distinctUserArray = [];
+                $.each(dataArray, function (i, obj) {
+                    var username = obj["userName"];
+                    var has = false;
+                    for (var j = 0; j < distinctUserArray.length; j++) {
+                        if (distinctUserArray[j] == username) {
+
+                            has = true;
+                            break;
+                        }
+                    }
+                    if (has == false) {
+                        distinctUserArray.push(username);
+                    }
+                })
+
+                var currStr = "";
+                var lastStr = "";
+                var distinctTimerArray = [];
+                $.each(dataArray, function (i, obj) {
+                    currStr = obj["hour"];
+                    if (currStr != lastStr) {
+                        distinctTimerArray.push(currStr);
+                    }
+                    lastStr = currStr;
+                })
+
+                for (var x = 0; x < distinctUserArray.length; x++) {
+                    var username = distinctUserArray[x];
+                    var json = {
+                        name: username,
+                        type: "bar",
+                        data:[]
+                    };
+
+                    for (var y = 0; y < distinctTimerArray.length; y++) {
+
+                        var time = distinctTimerArray[y];
+                        var value = 0;
+                        for (var z = 0; z < dataArray.length; z++) {
+                            if (username == dataArray[z]["userName"] && time == dataArray[z]["hour"]) {
+                                value = dataArray[z]["Count"];
+                                break;
+                            }
+                        }
+                        json.data.push(value);
+                    }
+
+                    seriesData.push(json);
+                }
+
+                option.legend.data = distinctUserArray;
+                option.xAxis.data = distinctTimerArray;
+                option.series = seriesData;
+                chart3.clear();
+                chart3.setOption(option);
+
+            }
+        })
+    }
+    function 下左1() {
+        chart4= echarts.init(document.getElementById("echart2"));
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b} <br/>键盘：{c}次'
+            },
+            grid: {
+                left: "10%",
+                top: "35px",
+                right: "5%",
+                bottom: "20%",
+            },
+            color: public_color_array[1],
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    interval: 0,
+                    rotate: 0,
+                    formatter: splitStr
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+                {
+                    type: 'bar',
+                    data: [],
+                    markLine: {
+                        data: [
+                            { type: 'average', name: '平均值' }
+                        ]
+                    }
+                }
+
+            ]
+        };
+
+        var index = 0;
+        $.ajax({
+            url: "../api/data/get_common?tableName=vw_当日_用户类别_键盘点击",
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+
+                var xAxisData = [];
+                var seriesData = [];
+                $.each(dataArray, function (i, obj) {
+
+                    xAxisData.push(obj["userName"]);
+                    seriesData.push(obj["Count"]);
+                });
+
+
+
+                option.xAxis.data = xAxisData;
+                option.series[0].data = seriesData;
+
+                chart4.clear();
+                chart4.setOption(option);
+
+            }
+        })
+    }
+    function 上右() {
+        var index = 0;
+        $.ajax({
+            url: "../api/data/get_common?tableName=vw_用户当前使用软件展示",
+            beforeSend: function () {
+                index = layer.load(2);
+                $("#echart5").html("<div>正在拼命加载……</div>");
+            },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+                var html = "";
+                $.each(dataArray, function (i, obj) {
+
+                    var appName = obj["windowTitle"];
+                    if (appName.length > 20) {
+                        appName = appName.substring(0, 18) + '..';
+                    }
+                    html += "<div class='showAppDiv'><span>[" + (i + 1) + "]" + obj["userName"]
+                        + "在[" + obj["partDate"]+"]使用[" + appName + "]</span></div>";
+
+
+                });
+                $("#echart5").html(html);
+
+            }
+        })
+    }
+    function 下右() {
+        chart6 = echarts.init(document.getElementById("echart6"));
+        var option = {
+
+            tooltip: {
+                trigger: 'axis',
+                formatter: function (parms) {
+                    var html = "";
+                    $.each(parms, function (i, obj) {
+                        if (obj["value"] > 0) {
+                            html += "<br/>" + obj["axisValue"] + "点-" + obj["seriesName"] + "繁忙程度：" + obj["value"];
+                        }
+                        
+                    })
+                    return html;
+                }
+            },
+            legend: {
+                data: [],
+                textStyle: {
+                    color: "#dcdcdd"
+                }
+            },
+            grid: {
+                left: "10%",
+                top: "35px",
+                right: "5%",
+                bottom: "10%",
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: true,
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                    formatter: '{value} 点'
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 0,
+                        type: "dotted"
+                    },
+                },
+                splitLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                    }
+                },
+                data: []
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: "dotted"
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    splitNumber: 1,
+                    textStyle: {
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: "12",
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: "rgba(255,255,255,0.1)",
+                        width: 1,
+                        type: 'solid'
+                    }
+                }
+            },
+            series: [
+
+            ]
+        };
+
+
+        var index = 0;
+        $.ajax({
+            url: "../api/data/get_user_hours_mouseClick",
+            beforeSend: function () { index = layer.load(2); },
+            dataType: "json",
+            success: function (dataArray) {
+                layer.close(index);
+
+                var seriesData = [];
+                var distinctUserArray = [];
+                $.each(dataArray, function (i, obj) {
+                    var username = obj["userName"];
+                    var has = false;
+                    for (var j = 0; j < distinctUserArray.length; j++) {
+                        if (distinctUserArray[j] == username) {
+
+                            has = true;
+                            break;
+                        }
+                    }
+                    if (has==false) {
+                        distinctUserArray.push(username);
+                    }
+                })
+
+                var currStr = "";
+                var lastStr = "";
+                var distinctTimerArray = [];
+                $.each(dataArray, function (i, obj) {
+                    currStr = obj["hour"];
+                    if (currStr != lastStr) {
+                        distinctTimerArray.push(currStr.toString());
+                    }
+                    lastStr = currStr;
+                })
+
+                for (var x = 0; x < distinctUserArray.length; x++) {
+                    var username = distinctUserArray[x];
+                    var json = {
+                        name: username,
+                        type: "bar",
+                        data: []
+                    };
+
+                    for (var y = 0; y < distinctTimerArray.length; y++) {
+
+                        var time = distinctTimerArray[y];
+                        var value = 0;
+                        for (var z = 0; z < dataArray.length; z++) {
+                            if (username == dataArray[z]["userName"] && time == dataArray[z]["hour"]) {
+                                value = dataArray[z]["Count"];
+                                break;
+                            }
+                        }
+                        json.data.push(value);
+                    }
+
+                    seriesData.push(json);
+                }
+
+                option.legend.data = distinctUserArray;
+                option.xAxis.data = distinctTimerArray;
+                option.series = seriesData;
+                chart6.clear();
+                chart6.setOption(option);
+
+            }
+        })
+    }
+
+</script>

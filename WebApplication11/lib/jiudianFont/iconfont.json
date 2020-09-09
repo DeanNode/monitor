@@ -1,0 +1,380 @@
+{
+  "id": "1546806",
+  "name": "酒店管理",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon",
+  "description": "酒店管理",
+  "glyphs": [
+    {
+      "icon_id": "284390",
+      "name": "设备_灯泡 ",
+      "font_class": "hekriconshebeidengpao",
+      "unicode": "e63c",
+      "unicode_decimal": 58940
+    },
+    {
+      "icon_id": "2233710",
+      "name": "建筑",
+      "font_class": "building",
+      "unicode": "e777",
+      "unicode_decimal": 59255
+    },
+    {
+      "icon_id": "2959080",
+      "name": "设施类型",
+      "font_class": "sheshileixing",
+      "unicode": "e630",
+      "unicode_decimal": 58928
+    },
+    {
+      "icon_id": "3167185",
+      "name": "24h电话服务",
+      "font_class": "hdianhuafuwu",
+      "unicode": "e678",
+      "unicode_decimal": 59000
+    },
+    {
+      "icon_id": "3167188",
+      "name": "220v",
+      "font_class": "v",
+      "unicode": "e679",
+      "unicode_decimal": 59001
+    },
+    {
+      "icon_id": "3167190",
+      "name": "TV",
+      "font_class": "TV",
+      "unicode": "e67a",
+      "unicode_decimal": 59002
+    },
+    {
+      "icon_id": "3167192",
+      "name": "wifi",
+      "font_class": "wifi",
+      "unicode": "e67b",
+      "unicode_decimal": 59003
+    },
+    {
+      "icon_id": "3167197",
+      "name": "电梯",
+      "font_class": "dianti",
+      "unicode": "e67c",
+      "unicode_decimal": 59004
+    },
+    {
+      "icon_id": "3167200",
+      "name": "行李寄存",
+      "font_class": "hanglijicun",
+      "unicode": "e67d",
+      "unicode_decimal": 59005
+    },
+    {
+      "icon_id": "3167204",
+      "name": "快餐",
+      "font_class": "kuaican",
+      "unicode": "e67e",
+      "unicode_decimal": 59006
+    },
+    {
+      "icon_id": "3167207",
+      "name": "空调",
+      "font_class": "kongtiao",
+      "unicode": "e67f",
+      "unicode_decimal": 59007
+    },
+    {
+      "icon_id": "3167209",
+      "name": "请勿打扰",
+      "font_class": "qingwudarao",
+      "unicode": "e680",
+      "unicode_decimal": 59008
+    },
+    {
+      "icon_id": "3167213",
+      "name": "时钟",
+      "font_class": "shizhong",
+      "unicode": "e681",
+      "unicode_decimal": 59009
+    },
+    {
+      "icon_id": "3167215",
+      "name": "停车",
+      "font_class": "tingche",
+      "unicode": "e682",
+      "unicode_decimal": 59010
+    },
+    {
+      "icon_id": "3167220",
+      "name": "洗衣机",
+      "font_class": "xiyiji",
+      "unicode": "e683",
+      "unicode_decimal": 59011
+    },
+    {
+      "icon_id": "3167227",
+      "name": "钥匙",
+      "font_class": "yuechi",
+      "unicode": "e684",
+      "unicode_decimal": 59012
+    },
+    {
+      "icon_id": "3167230",
+      "name": "座机",
+      "font_class": "zuoji",
+      "unicode": "e685",
+      "unicode_decimal": 59013
+    },
+    {
+      "icon_id": "3712451",
+      "name": "设备管理",
+      "font_class": "device-management",
+      "unicode": "e686",
+      "unicode_decimal": 59014
+    },
+    {
+      "icon_id": "3758266",
+      "name": "建筑",
+      "font_class": "jianzhu",
+      "unicode": "e612",
+      "unicode_decimal": 58898
+    },
+    {
+      "icon_id": "4641177",
+      "name": "设备",
+      "font_class": "shebei",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "4685783",
+      "name": "设备",
+      "font_class": "Group-",
+      "unicode": "e6ae",
+      "unicode_decimal": 59054
+    },
+    {
+      "icon_id": "4719750",
+      "name": "设备绑定",
+      "font_class": "shebeibangding",
+      "unicode": "e6b0",
+      "unicode_decimal": 59056
+    },
+    {
+      "icon_id": "4799936",
+      "name": "设备",
+      "font_class": "shebei1",
+      "unicode": "e79f",
+      "unicode_decimal": 59295
+    },
+    {
+      "icon_id": "4984013",
+      "name": "市政设施管网",
+      "font_class": "shizhengsheshiguanwang",
+      "unicode": "e699",
+      "unicode_decimal": 59033
+    },
+    {
+      "icon_id": "5383814",
+      "name": "设备",
+      "font_class": "huabanfuben",
+      "unicode": "e660",
+      "unicode_decimal": 58976
+    },
+    {
+      "icon_id": "6319086",
+      "name": "设备",
+      "font_class": "shebei2",
+      "unicode": "e661",
+      "unicode_decimal": 58977
+    },
+    {
+      "icon_id": "6319090",
+      "name": "设备2",
+      "font_class": "shebei3",
+      "unicode": "e662",
+      "unicode_decimal": 58978
+    },
+    {
+      "icon_id": "6489745",
+      "name": "设备",
+      "font_class": "shebei4",
+      "unicode": "e695",
+      "unicode_decimal": 59029
+    },
+    {
+      "icon_id": "6803618",
+      "name": "酒店相关系列",
+      "font_class": "Door-Hanger",
+      "unicode": "e7ec",
+      "unicode_decimal": 59372
+    },
+    {
+      "icon_id": "6803620",
+      "name": "Fork-& Knife",
+      "font_class": "Fork-Knife",
+      "unicode": "e7ed",
+      "unicode_decimal": 59373
+    },
+    {
+      "icon_id": "6803650",
+      "name": "Television",
+      "font_class": "Television",
+      "unicode": "e7fa",
+      "unicode_decimal": 59386
+    },
+    {
+      "icon_id": "7461493",
+      "name": "设备",
+      "font_class": "shebei5",
+      "unicode": "e638",
+      "unicode_decimal": 58936
+    },
+    {
+      "icon_id": "7665982",
+      "name": "设备",
+      "font_class": "shebei6",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "7791981",
+      "name": "设备",
+      "font_class": "ziyuanxhdpi",
+      "unicode": "e64c",
+      "unicode_decimal": 58956
+    },
+    {
+      "icon_id": "8458763",
+      "name": "UI_icon2_设备设施1",
+      "font_class": "UI_icon_shebeisheshi",
+      "unicode": "e687",
+      "unicode_decimal": 59015
+    },
+    {
+      "icon_id": "8798036",
+      "name": "设备",
+      "font_class": "shebei7",
+      "unicode": "e629",
+      "unicode_decimal": 58921
+    },
+    {
+      "icon_id": "10561179",
+      "name": "Hairdryer",
+      "font_class": "Hairdryer",
+      "unicode": "e650",
+      "unicode_decimal": 58960
+    },
+    {
+      "icon_id": "10561180",
+      "name": "Paper, toilet",
+      "font_class": "Papertoilet",
+      "unicode": "e651",
+      "unicode_decimal": 58961
+    },
+    {
+      "icon_id": "10561181",
+      "name": "Key",
+      "font_class": "Key",
+      "unicode": "e652",
+      "unicode_decimal": 58962
+    },
+    {
+      "icon_id": "10561182",
+      "name": "Icon",
+      "font_class": "Icon",
+      "unicode": "e653",
+      "unicode_decimal": 58963
+    },
+    {
+      "icon_id": "10561183",
+      "name": "Keyhole",
+      "font_class": "Keyhole",
+      "unicode": "e654",
+      "unicode_decimal": 58964
+    },
+    {
+      "icon_id": "10561184",
+      "name": "Table lamp, 02",
+      "font_class": "Tablelamp",
+      "unicode": "e655",
+      "unicode_decimal": 58965
+    },
+    {
+      "icon_id": "10561185",
+      "name": "Picture",
+      "font_class": "Picture",
+      "unicode": "e656",
+      "unicode_decimal": 58966
+    },
+    {
+      "icon_id": "10561187",
+      "name": "Table lamp",
+      "font_class": "Tablelamp1",
+      "unicode": "e657",
+      "unicode_decimal": 58967
+    },
+    {
+      "icon_id": "10561188",
+      "name": "Scales",
+      "font_class": "Scales",
+      "unicode": "e658",
+      "unicode_decimal": 58968
+    },
+    {
+      "icon_id": "10561189",
+      "name": "Toaster",
+      "font_class": "Toaster",
+      "unicode": "e659",
+      "unicode_decimal": 58969
+    },
+    {
+      "icon_id": "10561191",
+      "name": "Washbasin",
+      "font_class": "Washbasin",
+      "unicode": "e65a",
+      "unicode_decimal": 58970
+    },
+    {
+      "icon_id": "10561193",
+      "name": "Toothpaste",
+      "font_class": "Toothpaste",
+      "unicode": "e65b",
+      "unicode_decimal": 58971
+    },
+    {
+      "icon_id": "10561194",
+      "name": "Plant, herb",
+      "font_class": "Plantherb",
+      "unicode": "e65c",
+      "unicode_decimal": 58972
+    },
+    {
+      "icon_id": "10561195",
+      "name": "Stove",
+      "font_class": "Stove",
+      "unicode": "e65d",
+      "unicode_decimal": 58973
+    },
+    {
+      "icon_id": "10561197",
+      "name": "Cactus",
+      "font_class": "Cactus",
+      "unicode": "e65e",
+      "unicode_decimal": 58974
+    },
+    {
+      "icon_id": "10561345",
+      "name": "Blender, mixer",
+      "font_class": "Blendermixer",
+      "unicode": "e65f",
+      "unicode_decimal": 58975
+    },
+    {
+      "icon_id": "10721310",
+      "name": "基础设施",
+      "font_class": "jichusheshi",
+      "unicode": "e631",
+      "unicode_decimal": 58929
+    }
+  ]
+}

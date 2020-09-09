@@ -1,0 +1,67 @@
+﻿
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>用户的页面</title>
+    <link href="~/lib/zTree/css/zTreeStyle/zTreeStyle.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/lib/zTree/js/jquery.ztree.all-3.5.min.js"></script>
+
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+</head>
+<body>
+    <div>
+        <ul id="tree" class="ztree" style="width:260px; overflow:auto;"></ul>
+    </div>
+
+</body>
+</html>
+<script>
+    var setting = {
+        check: {
+            enable: true
+        },
+        data: {
+            simpleData: {
+                enable: true
+            }
+        }
+    };
+
+    var layer;
+    layui.use(['layer'], function () {
+        layer = layui.layer;
+        //这里获取 znodes
+
+        $.ajax({
+            url: "../api/webapi_tree/getSystemPageTree",
+            success: function (zNodes) {
+                treeObj = $.fn.zTree.init($("#tree"), setting, zNodes);
+            }
+        })
+    })
+
+    //这是得到的方法
+    function getCheckedFunctionIdList() {
+
+        var functionIdList = "";
+        var treeObj = $.fn.zTree.getZTreeObj("tree");
+        var nodes = treeObj.getCheckedNodes(true);
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (node.id.substring(0,1)=="B") {
+                if (functionIdList) {
+                    functionIdList += "," + node.id.substring(1, (node.id.length))
+                }
+                else {
+                    functionIdList =node.id.substring(1, (node.id.length))
+                }
+            }
+            
+        }
+        return functionIdList;
+    }
+</script>

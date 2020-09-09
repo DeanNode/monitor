@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>查看日志</title>
+    <link href="~/lib/global.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+    <script language="JavaScript" src="~/lib/i18n/jquery.i18n.properties.min.js"></script>    
+    <script src="~/Scripts/public.js"></script>
+    <script src="~/Scripts/jquery.fileDownload.js"></script>
+    <style>
+        .layui-table, .layui-table-view {
+            margin: 0;
+        }
+        .layui-btn-group {
+            margin-top: -8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body style="background:#fff;">
+    <!--这里是配置前面查询条件begin-->
+    <div class="layui-fluid">
+        <div class="layui-row">
+            <div class="layui-col-xs12">
+                <div class="layui-form layui-elem-quote layui-form searchDivStyle layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">日志类型</label>
+                        <div class="layui-input-inline-short">
+                            <select name="logType" placeholder="请选择页面角色">
+                                <option data-lang="playSelect" value="">请选择</option>
+                                <option value="新增">新增</option>
+                                <option data-lang="update" value="更新">更新</option>
+                                <option value="删除">删除</option>
+                                <option value="登录">登录</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">日志内容</label>
+                        <div class="layui-input-inline-short">
+                            <input type="text" name="logText" placeholder="日志内容" autocomplete="off" class="layui-input" op="like" />
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">创建时间(起)</label>
+                        <div class="layui-input-inline-short">
+                            <input type="text" class="layui-input" name="s.createDate" id="beginDt" op="startdatetime">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">创建时间(至)</label>
+                        <div class="layui-input-inline-short">
+                            <input type="text" class="layui-input" name="s.createDate" id="endDt" op="enddatetime">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <div class="layui-input-inline">
+                            <div type="button" id="btnSearch" class="layui-btn layui-btn-normal" data-lang="select" onclick="searchDb()">查询</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--这里是配置前面查询条件end-->
+        <div class="layui-row">
+            <div class="layui-col-xs12">
+                <!--这里是配置表格begin-->
+                <div class="layui-btn-group">
+                    <div type="button" class="layui-btn layui-btn-normal" onclick="exportMethod()"><i class="layui-icon layui-icon-table"></i>导出</div>
+                </div>
+                </div>
+            </div>
+                <div class="layui-row">
+                    <div class="layui-col-xs12">
+                        <table id="mainTable" lay-filter="mainTable"></table>
+                        <!--这里是配置表格end-->
+                        <!--这里保持预留项目的begin-->
+                        <form id="form1" runat="server">
+                            <div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!--这里保持预留项目的end-->
+</body>
+</html>
+<!--这里是弹出框的begin-->
+
+<!--这里是弹出框的end-->
+
+<script type="text/javascript">
+    var gridColumnArray = [ //表头
+        { field: '', title: '序号', width: 60,type: "numbers" }
+        , { field: 'logType', title: '日志类型', width: 200 }
+        , { field: 'logText', title: '日志内容'}
+        , { field: 'createDate', title: '创建时间', width: 200 }
+        , { field: 'createUserName', title: '创建人', width: 200 }
+        //, {field: 'remarks', title: '备注', width: 280}
+     ];
+     var layer, form, table, $, laydate;
+     layui.use(['layer', 'form', 'table', 'laydate'], function () {
+         layer = layui.layer;
+         form = layui.form;
+         table = layui.table;
+         $ = layui.$; laydate = layui.laydate;
+
+         //这里进行装载数据
+         initForm();
+
+     })
+     //这里初始化界面
+     function initForm() {
+         //设定时间
+         laydate.render({
+             elem: '#beginDt' //指定元素
+             , value: getCurrentAddDayYMD(-7) //必须遵循format参数设定的格式
+         });
+         laydate.render({
+             elem: '#endDt' //指定元素
+             , value: getCurrentAddDayYMD(1) //必须遵循format参数设定的格式
+         });
+         form.render(); //刷新select选择框渲染
+         initGrid();
+         //这里渲染table
+         window.setTimeout(searchDb, 300);//延迟一下进行装载
+     }
+
+    //让grid先显示一下
+    function initGrid() {
+        table.render({
+            elem: '#mainTable'
+            , height: 'full-130'
+            , data: []
+            , page: true //开启分页
+            , cols: [gridColumnArray]
+        });
+    }
+     function searchDb() {
+         //这里获取信息
+         var divObject = $(".searchDivStyle");
+         var searchJsonArray = getJsonListSearchForm(divObject);
+         showConsoleLog(searchJsonArray);
+         console.log(searchJsonArray);
+         var passJson = {};
+         passJson.centerSearchArray = searchJsonArray
+         ajaxMethodWithWaiting2("../api/webapiMain/getSysLog", passJson, function (JsonArray) {
+             layer.closeAll();//关闭所有的
+             table.render({
+                 elem: '#mainTable'
+                 , height: 'full-130'
+                 , data: JsonArray
+                 , page: true //开启分页
+                 , cols: [gridColumnArray]
+             });
+         })
+    }
+    function exportMethod() {
+        var iRowsLen = $("div[lay-id='mainTable'] .layui-table-body  tr").length;
+        if (iRowsLen <= 0) {
+            showMsg(langMaps.queryBeforeExporting);
+            return; 
+        }
+        layer.confirm('确定要导出[' + iRowsLen + ']条记录吗？', { icon: 3, title: langMaps.tips }, function (index) {
+            layer.close(index);
+            var url = "../api/export/publicExport";
+            var passJson = {
+                keyName: "getSysLog",
+                columnArray: gridColumnArray,
+                fileName: langMaps.logExport
+            };
+            $.fileDownload(url, {
+                httpMethod: 'post',
+                data: passJson,
+                prepareCallback: function (url) {
+                    showMsg(langMaps.loading);
+                },
+                successCallback: function (url) {
+                    showMsg(langMaps.importSucceeded);
+                },
+                failCallback: function (html, url) {
+                    showMsg(html);
+                }
+            });
+        });
+     }
+</script>

@@ -1,0 +1,660 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>员工信息</title>
+    <link href="~/lib/global.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/dtree.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/font/dtreefont.css" rel="stylesheet" />
+
+    <script src="~/lib/layui/layui.js"></script>
+    <script src="~/Scripts/public.js"></script>
+
+    <script src="~/Scripts/jquery.fileDownload.js"></script>
+
+
+</head>
+<body>
+    <div class="layui-form" style="z-index:9999" id="divCenter" >
+        <div class="layui-form-item" style="text-align:left">
+            <label class="layui-form-label" >员工选择：</label>
+            <div class="layui-input-inline" style="width:300px;text-align:left">
+                <ul id="selectUserTree" class="dtree" data-id="0" style="background-color:#E8E8E8;z-index:9999999"></ul>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">系统key</label>
+                <div class="layui-input-inline-short">
+                    <input type="text" name="cpuId" maxlength="20" placeholder="系统key" autocomplete="off" class="layui-input" op="like" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">手机号码</label>
+                <div class="layui-input-inline-short">
+                    <input type="text" name="account" maxlength="20" placeholder="手机号码" autocomplete="off" class="layui-input" op="like" />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">员工名称</label>
+                <div class="layui-input-inline-short">
+                    <input type="text" name="userName" maxlength="20" placeholder="员工名称" autocomplete="off" class="layui-input" op="like" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <div type="button" id="btnSearch" class="layui-btn layui-btn-normal" onclick="searchDb()">查询</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--这里是配置前面查询条件end-->
+    <table class="layui-hide" id="mainTable" lay-filter="mainTable"></table>
+    <!--这里是配置表格end-->
+    <!--这里保持预留项目的begin-->
+    <form id="form1" runat="server">
+        <div>
+        </div>
+    </form>
+</body>
+</html>
+<!--这里是弹出框的begin-->
+<div id="open_1_Div" style="display:none" class="openDivStyle">
+    <div class="layui-form">
+        <div class="layui-form-item">
+
+            <div class="layui-inline">
+                <label class="layui-form-label">所属小组<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <ul id="selectDepartTree" class="dtree" data-id="0" style="background-color:#E8E8E8"></ul>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">系统key<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="cpuId" maxlength="25" placeholder="系统key" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">员工姓名<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="userName" maxlength="25" placeholder="员工姓名" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">性别<span class="mustInput">*</span></label>
+                <div class="layui-input-inline-short">
+                    <select name="sex"><option value="1" selected>男</option><option value="2">女</option></select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">手机号码<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="account" maxlength="25" placeholder="手机号码" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">计算机名称</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="machineName" maxlength="25" placeholder="计算机名称" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block Single">
+                    <textarea name="remarks" placeholder="请输入内容" maxlength="250" class="layui-textarea"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--这里是弹出框的end-->
+
+
+
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container" style="z-index:10">
+        <button class="layui-btn layui-btn-sm" onclick="add()">新增</button>
+        <button class="layui-btn layui-btn-warm layui-btn-sm" onclick="edit()">编辑</button>
+        <button class="layui-btn layui-btn-danger layui-btn-sm" onclick="del()">删除</button>
+        <button class="layui-btn layui-btn-normal layui-btn-sm" onclick="exportMethod()">导出</button>
+        <button class="layui-btn layui-btn-warm layui-btn-sm" onclick="changePsw()">修改密码</button>
+    </div>
+</script>
+
+<script type="text/javascript">
+
+    function changePsw() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        if (selectedRows.length <= 0) {
+            layer.msg("请选择记录进行修改！");
+            return;
+        }
+
+        var idList = "";
+        $.each(selectedRows, function (i, json) {
+
+            if (idList) {
+                idList += "," + json["userId"];
+            }
+            else {
+                idList = json["userId"];
+            }
+        })
+        if (idList) {
+            layer.prompt({ title: '请输入新密码', formType: 1 }, function (pass, index) {
+                layer.close(index);
+                var passJson = {
+                    idList: idList, psw: pass
+                };
+                var iWaiting = 0;
+                $.ajax({
+                    type: "post",
+                    url: "../api/webapi_base/changePsw",
+                    beforeSend: function () {
+                        iWaiting = layer.load(1);
+                    },
+                    data: passJson,
+                    success: function (data) {
+                        layer.close(iWaiting);//关闭等待的
+                        if (data.code == 100) {
+                            showMsg("更新成功！");
+                            layer.close(index);
+                        }
+                        else {
+                            showMsg("更新失败！" + data.msg);
+                        }
+                    }
+                })
+            });
+        }
+
+    }
+
+    // account,cpuid,belongsId,userName,remarks,userId
+    var gridColumnArray = [ //表头
+        { checkbox: true, field: "", title: "" }
+        , { field: 'departmentName', title: '部门名称', width: 300 }
+        , { field: 'cpuId', title: '系统key', width: 300 }
+        , { field: 'userName', title: '员工姓名', width: 200 }
+        , {
+            field: 'sex', title: '性别', width: 200, templet: function (d) {
+                if (d.sex == "1") {
+                    return '男'
+                }
+                else {
+                    return '女'
+                }
+                
+            } }
+        , { field: 'account', title: '手机号码', width: 200 }
+        , { field: 'remarks', title: '备注'}
+        , { field: 'createName', title: '创建人', hide: true }
+        , { field: 'createDate', title: '创建时间', hide: true }
+        , { field: 'updateName', title: '修改人', hide: true }
+        , { field: 'updateDate', title: '修改时间', hide: true }
+    ];
+
+    var public_firstOpen = true;
+
+    var layer, form, table, $, laydate;
+    var dtree;
+    var departTree;
+    layui.extend({
+        dtree: '../Scripts/layui_ext/dtree/dtree'   // {/}的意思即代表采用自有路径，即不跟随 base 路径
+    }).use(['layer', 'laydate', 'dtree', 'form', 'table'], function () {
+
+        dtree = layui.dtree
+        layer = layui.layer;
+        form = layui.form;
+        table = layui.table;
+        laydate = layui.laydate;
+        $ = layui.$;
+
+        $("body").on("click", function (event) {
+            $("div[dtree-id][dtree-select]").removeClass("layui-form-selected");
+            $("div[dtree-id][dtree-card]").removeClass("dtree-select-show layui-anim layui-anim-upbit");
+        });
+        //这里进行装载数据
+        initForm();
+        });   
+
+    //这里初始化界面
+    function initForm() {
+        //初始化
+       
+        var waitIndex = 0;
+        $.ajax({
+            url: "../api/data2020/getUserTree",
+            dataType: "json",
+            beforeSend: function () {
+                waitIndex = layer.load(1);
+            },
+            success: function (dt) {
+                layer.close(waitIndex);
+                console.log(JSON.stringify(dt));
+
+                var SelTree6 = dtree.renderSelect({
+                    elem: "#selectUserTree",
+                    width: "100%", // 指定树的宽度
+                    menubar: true,
+                    menubarTips: {
+                        group: ["moveDown", "moveUp", "refresh"]
+                    },
+                    data: dt, // 使用data加载
+                    selectTips: "请选择要对比的员工",
+                    dataFormat: "list",  //配置data的风格为list
+                    checkbarType: "p-casc",
+                    checkbar: true, //开启复选框
+                    done: function (res, $ul, first) {
+                        if (first) {
+                            //这里进行处理
+                            console.log("树装载完成");
+                            //$(".dtree-nav-div").attr("dtree-click", "");
+                            //$(".t-click ").on("click", function () {
+                            //    console.log($(this).attr("data-id"));
+                            //});
+                        }
+                    }
+                });
+                dtree.on("chooseDone('selectUserTree')", function (parms) {
+                    console.log(parms);
+                    //
+                    var iCount = 0;
+                    $.each(parms.checkbarParams, function (i, json) {
+                        var nodeId = json["nodeId"];
+                        if (nodeId && nodeId.length > 1) {
+
+                            if (nodeId.substring(0, 1) == "U") {
+                                iCount++;
+                            }
+                        }
+                    })
+                    if (iCount > 0) {
+                        $("#selectUserTree_select_input_id").val("共选择【" + iCount + "】位员工");
+                    }
+                    else {
+                        $("#selectUserTree_select_input_id").val("请选择要对比的员工");
+                    }
+
+                });
+                dtree.on("changeSelect('selectUserTree')", function (obj) {
+                    console.log(obj.show); // 下拉树面板是否展开
+                    console.log(obj.param); // 点击下拉树选中的参数集
+                    var select_nodeIdStr = obj.param.selectUserTree_select_nodeId;
+                    if (select_nodeIdStr) {
+                        var iCount = 0;
+                        var vArray = select_nodeIdStr.split(',');
+                        $.each(vArray, function (i, json) {
+                            var nodeId = vArray[i];
+                            if (nodeId && nodeId.length > 1) {
+
+                                if (nodeId.substring(0, 1) == "U") {
+                                    iCount++;
+                                }
+                            }
+                        });
+                        if (iCount > 0) {
+                            $("#selectUserTree_select_input_id").val("共选择【" + iCount + "】位员工");
+                        }
+                        else {
+                            $("#selectUserTree_select_input_id").val("请选择要对比的员工");
+                        }
+                    }
+
+                });
+
+                //这里装载组织结构
+                var departArray = [];
+                $.each(dt, function (i, json) {
+                    if (json["type"] != "user") {
+                        departArray.push(json);
+                    }
+                })
+                departTree = dtree.renderSelect({
+                    elem: "#selectDepartTree",
+                    width: "100%", // 指定树的宽度
+                    menubar: true,
+                    menubarTips: {
+                        group: ["moveDown", "moveUp", "refresh"]
+                    },
+                    data: departArray, // 使用data加载
+                    selectTips: "请选择所属的部门",
+                    dataFormat: "list",  //配置data的风格为list
+                    checkbarType: "p-casc",
+                    checkbar: false, //开启复选框
+                    done: function (res, $ul, first) {
+
+                    }
+                });
+            }
+        })
+
+        initGrid();
+        //这里渲染table
+        window.setTimeout(searchDb, 300);//延迟一下进行装载
+    }
+
+    //让grid先显示一下
+    function initGrid() {
+        table.render({
+            elem: '#mainTable'
+            , toolbar: "#toolbarDemo"
+            , height: 'full-130'
+            , data: []
+            , page: true //开启分页
+            , limits: [15, 30, 50, 100]
+            , limit: 15 //每页默认显示的数量
+            , cols: [gridColumnArray]
+        });
+    }
+
+    function getTreeUserIdList() {
+        var userIdList = "";
+        var param = dtree.getCheckbarNodesParam("selectUserTree");
+        if (param.length > 0) {
+            $.each(param, function (i, obj) {
+                var id = obj["nodeId"].toString();
+                if (id.substring(0, 1) == "U") {
+                    if (userIdList == "") {
+                        userIdList = id.substring(1);
+                    }
+                    else {
+                        userIdList += "," + id.substring(1);
+                    }
+                }
+            })
+        }
+        return userIdList;
+    }
+
+    function searchDb() {
+        //这里获取信息
+        var divObject = $(".searchDivStyle");
+        var searchJsonArray = getJsonListSearchForm(divObject);
+        showConsoleLog(searchJsonArray);
+        var passJson = {};
+        passJson.userIdList = getTreeUserIdList();
+        passJson.cpuId = $("#divCenter input[name='cpuId']").val();
+        passJson.account = $("#divCenter input[name='account']").val();
+        passJson.userName = $("#divCenter input[name='userName']").val();
+
+        ajaxMethodWithWaiting2("../api/webapi_base/getUserList", passJson, function (JsonArray) {
+            layer.closeAll();//关闭所有的
+            table.render({
+                elem: '#mainTable'
+                , toolbar: "#toolbarDemo"
+                , height: 'full-130'
+                , data: JsonArray
+                , page: true //开启分页
+                , limits: [15, 30, 50, 100]
+                , limit: 15 //每页默认显示的数量
+                , cols: [gridColumnArray]
+            });
+        })
+    }
+
+
+    function setDefaultValue() {
+        //设置默认值
+        $("input[name='orderNum']").val("1");
+    }
+    function add() {
+        //这里进行清空数据
+        dtree.dataInit("selectDepartTree", "");
+        $("#selectDepartTree_select_input_id").val("");
+        $("#open_1_Div input[name='cpuId']").val("");
+        $("#open_1_Div input[name='userName']").val("");
+        //selectSex
+        $("#open_1_Div input[name='sex']").val("1");
+
+        $("#open_1_Div input[name='machineName']").val("");
+        $("#open_1_Div input[name='account']").val("");
+        $("#open_1_Div textarea[name='remarks']").val("");
+        form.render("select");
+        //这里弹出来
+        layer.open({
+            type: 1,
+            area: ["500px", "520px"],
+            content: $('#open_1_Div'), //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+            btn: ["确定", "取消"],
+            btn1: function (index) {
+                //这里开始确定
+                var param = dtree.getNowParam(departTree);
+                if (JSON.stringify(param) == "{}") {
+                    layer.msg("请选择所属部门！");
+                    return;
+                }
+                var selectDepartId = param["nodeId"];
+                if (selectDepartId == "") {
+                    layer.msg("请选择所属部门！");
+                    return;
+                }
+                var cpuId = $("#open_1_Div input[name='cpuId']").val();
+                if (!cpuId) {
+                    layer.msg("请填写系统key！");
+                    return;
+                }
+                var userName = $("#open_1_Div input[name='userName']").val();
+                if (!userName) {
+                    layer.msg("请填写员工姓名！");
+                    return;
+                }
+
+                var machineName = $("#open_1_Div input[name='machineName']").val();
+                
+                var account = $("#open_1_Div input[name='account']").val();
+                if (!account) {
+                    layer.msg("请填写手机号码！");
+                    return;
+                }
+                var remarks = $("#open_1_Div textarea[name='remarks']").val();
+                var passObj = {
+                    belongsId: selectDepartId,
+                    cpuId: cpuId,
+                    userName: userName,
+                    sex: $("#open_1_Div select[name='sex']").val(),
+                    psw: "123456",
+                    machineName: machineName,
+                    account: account,
+                    remarks: remarks
+                };
+                layer.confirm('确定要添加信息吗？', { icon: 3, title: '提示' }, function (index) {
+
+                    var waitIndex = 0;
+                    $.ajax({
+                        type: "post",
+                        url: "../api/data2020/machineUserAdd",
+                        data: passObj,
+                        beforeSend: function () { waitIndex = layer.load(1); },
+                        success: function (data) {
+                            layer.close(waitIndex);
+                            if (data.code == 100) {
+                                showMsg(data.msg);
+                                searchDb();
+                            }
+                            else if (data.code == 10) {
+                                showMsg(data.msg);
+                            }
+                            else {
+                                showMsg(data.msg);
+                            }
+                        }
+                    })
+                })
+            }
+        });
+    }
+
+    function edit() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        if (selectedRows.length == 1) {
+            var row = selectedRows[0];
+            var userId = row["userId"];
+            var belongsId = row["belongsId"];
+
+            dtree.dataInit("selectDepartTree", belongsId.toString());
+            $("#selectDepartTree_select_input_id").val(row["departmentName"]);
+            //dtree.chooseDataInit("selectDepartTree", belongsId.toString());
+            //这里进行赋值
+            $("#open_1_Div input[name='cpuId']").val(row["cpuId"]);
+            $("#open_1_Div input[name='userName']").val(row["userName"]);
+            $("#open_1_Div select[name='sex']").val(row["sex"]);
+            $("#open_1_Div input[name='machineName']").val(row["machineName"]);
+            $("#open_1_Div input[name='account']").val(row["account"]);
+            $("#open_1_Div textarea[name='remarks']").val(row["remarks"]);
+            form.render("select");
+            //这里弹出来
+            layer.open({
+                type: 1,
+                area: ["500px", "520px"],
+                content: $('#open_1_Div'), //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                btn: ["确定", "取消"],
+                btn1: function (index) {
+
+                    var param = dtree.getNowParam(departTree);
+                    if (JSON.stringify(param) == "{}") {
+                        layer.msg("请选择所属部门！");
+                        return;
+                    }
+                    var selectDepartId = param["nodeId"];
+                    if (selectDepartId == "") {
+                        layer.msg("请选择所属部门！");
+                        return;
+                    }
+                    var cpuId = $("#open_1_Div input[name='cpuId']").val();
+                    if (!cpuId) {
+                        layer.msg("请填写系统key！");
+                        return;
+                    }
+                    var userName = $("#open_1_Div input[name='userName']").val();
+                    if (!userName) {
+                        layer.msg("请填写员工姓名！");
+                        return;
+                    }
+
+                    var machineName = $("#open_1_Div input[name='machineName']").val();
+                    
+                    var account = $("#open_1_Div input[name='account']").val();
+                    if (!account) {
+                        layer.msg("请填写手机号码！");
+                        return;
+                    }
+                    var remarks = $("#open_1_Div textarea[name='remarks']").val();
+                    var passObj = {
+                        userId: userId,
+                        belongsId: selectDepartId,
+                        cpuId: cpuId,
+                        userName: userName,
+                        sex: $("#open_1_Div select[name='sex']").val(),
+                        psw: "123456",
+                        machineName: machineName,
+                        account: account,
+                        remarks: remarks
+                    };
+                    layer.confirm('确定要修改信息吗？', { icon: 3, title: '提示' }, function (index) {
+
+                        var waitIndex = 0;
+                        $.ajax({
+                            type: "post",
+                            url: "../api/data2020/machineUserModify",
+                            data: passObj,
+                            beforeSend: function () { waitIndex = layer.load(1); },
+                            success: function (data) {
+                                layer.close(waitIndex);
+                                if (data.code == 100) {
+                                    showMsg(data.msg);
+                                    searchDb();
+                                }
+                                else {
+                                    showMsg(data.msg);
+                                }
+                            }
+                        })
+
+                    })
+                }
+            });
+        }
+        else {
+            showMsg("请选择一行进行操作！");
+        }
+    }
+
+    function del() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        var iRowsLen = selectedRows.length;
+        if (iRowsLen > 0) {
+            layer.confirm('确定要删除[' + iRowsLen + ']条记录吗？', { icon: 3, title: '提示' }, function (index) {
+                var idList = "";
+                $.each(selectedRows, function (i, json) {
+                    if (idList) {
+                        idList += "," + json["userId"];
+                    }
+                    else {
+                        idList = json["userId"];
+                    }
+                })
+                var passJson = {};
+                passJson.idList = idList;
+                ajaxMethodWithWaiting2("../api/data2020/machineUserDel", passJson, function (data) {
+                    if (data.code == 100) {
+                        showMsg(data.msg);
+                        searchDb();
+                    }
+                    else {
+                        showMsg(data.msg);
+                    }
+                })
+                layer.closeAll();
+                //layer.close(index);
+            });
+        }
+        else {
+            showMsg("请选择一行进行操作！");
+        }
+    }
+    function exportMethod() {
+        var iRowsLen = $("div[lay-id='mainTable'] .layui-table-body  tr").length;
+        if (iRowsLen <= 0) {
+            showMsg("请先查询出数据后才能导出！");
+            return;
+        }
+        layer.confirm('确定要导出[' + iRowsLen + ']条记录吗？', { icon: 3, title: '提示' }, function (index) {
+            layer.close(index);
+            var url = "../api/export/publicExport";
+            var passJson = {
+                keyName: "getUserList",
+                columnArray: gridColumnArray,
+                fileName: "设备员工信息导出"
+            };
+            $.fileDownload(url, {
+                httpMethod: 'post',
+                data: passJson,
+                prepareCallback: function (url) {
+                    showMsg("正在导出……");
+                },
+                successCallback: function (url) {
+                    showMsg("导入成功！");
+                },
+                failCallback: function (html, url) {
+                    showMsg(html);
+                }
+            });
+
+        });
+    }
+</script>

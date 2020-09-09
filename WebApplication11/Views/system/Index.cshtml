@@ -1,0 +1,588 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>用户管理</title>
+    <link href="~/lib/global.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script language="JavaScript" src="~/lib/i18n/jquery.i18n.properties.min.js"></script>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+    <script src="~/Scripts/public.js"></script>
+    <script src="~/Scripts/jquery.fileDownload.js"></script>
+    <style>
+        .layui-form-item {
+            margin-bottom: 0px;
+        }
+    </style>
+</head>
+<body>
+    <!--这里是配置前面查询条件begin-->
+    <div class="layui-container" style="background-color:#ffffff;width:inherit;height:inherit">
+        <!--这里是配置前面查询条件begin-->
+        <blockquote class="layui-elem-quote layui-form searchDivStyle">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label" data-lang="userName">用户名称</label>
+                    <div class="layui-input-inline-short">
+                        <input type="text" name="UserName" maxlength="6" placeholder="用户名称" autocomplete="off" class="layui-input" op="like" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">页面角色</label>
+                    <div class="layui-input-inline-short">
+                        <select name="roleId"></select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">数据角色</label>
+                    <div class="layui-input-inline-short">
+                        <select name="dataRoleId"></select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">创建时间(起)</label>
+                    <div class="layui-input-inline-short">
+                        <input type="text" class="layui-input" name="createDate" placeholder="开始时间" id="beginDt" op="startdatetime">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">创建时间(至)</label>
+                    <div class="layui-input-inline-short">
+                        <input type="text" class="layui-input" name="createDate" placeholder="结束时间" id="endDt" op="enddatetime">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <div class="layui-input-inline">
+                        <div type="button" id="btnSearch" class="layui-btn layui-btn-normal" data-lang="select" onclick="searchDb()">查询</div>
+                    </div>
+                </div>
+            </div>
+        </blockquote>
+        <table id="mainTable" lay-filter="mainTable"></table>
+    </div>
+    <!--这里是配置前面查询条件end-->
+</body>
+</html>
+<!--这里是弹出框的begin-->
+<div id="open_1_Div" style="display:none" class="openDivStyle">
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <div class="layui-inline" style="display:none">
+                <label class="layui-form-label">用户id</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="userId" placeholder="用户名称" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" data-lang="userName">用户名称<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="userName" maxlength="100" placeholder="用户名称" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">真实名称<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="realName" maxlength="25" placeholder="真实名称" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">输入密码<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="password" name="psw" maxlength="25" placeholder="输入密码" autocomplete="off" class="layui-input" isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">密码确认<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="password" name="pswAgain" maxlength="25" placeholder="再次输入密码" autocomplete="off" class="layui-input" isNeed="1" isSumit="0" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" data-lang="phone">电话号码</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="phone" maxlength="11" placeholder="请填写电话号码" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">邮箱</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="email" maxlength="25" placeholder="请填写邮箱" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">页面角色<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <select name="roleId" placeholder="请选择页面角色" isNeed="1"></select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">数据角色<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <select name="dataRoleId" placeholder="请选择数据角色" isNeed="1"> </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">排序序号<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="number" class="layui-input " onafterpaste="inputInteger(this.value)" name="orderNum" lay-filter="orderNum" lay-search="" isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block Single">
+                    <textarea name="remarks" maxlength="250" placeholder="请输入内容" class="layui-textarea"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--这里是弹出框的end-->
+<!--这里是弹出框的begin-->
+<div id="open_1_Div_edit" style="display:none" class="openDivStyle">
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <div class="layui-inline" style="display:none">
+                <label class="layui-form-label">用户id</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="userId" placeholder="用户名称" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">用户名称<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="userName" maxlength="100" placeholder="用户名称" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">真实名称<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="realName" maxlength="25" placeholder="真实名称" autocomplete="off" class="layui-input " isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">电话号码</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="phone" maxlength="25" placeholder="请填写电话号码" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">邮箱</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="email" maxlength="25" placeholder="请填写邮箱" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">页面角色<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <select name="roleId" placeholder="请选择页面角色" isNeed="1"></select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">数据角色<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <select name="dataRoleId" placeholder="请选择数据角色" isNeed="1"> </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block Single">
+                    <textarea name="remarks" maxlength="250" placeholder="请输入内容" class="layui-textarea"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--这里是弹出框的end-->
+<!--这里是弹出框2的begin-->
+<div id="open_2_Div" style="display:none" class="openDivStyle">
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <div class="layui-inline" style="display:none">
+                <label class="layui-form-label">用户id</label>
+                <div class="layui-input-block Single">
+                    <input type="text" name="userId" placeholder="用户名称" autocomplete="off" class="layui-input " />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label" data-lang="password">输入密码<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="password" name="psw" maxlength="25" placeholder="输入密码" autocomplete="off" class="layui-input" isNeed="1" />
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">密码确认<span class="mustInput">*</span></label>
+                <div class="layui-input-block Single">
+                    <input type="password" name="pswAgain" maxlength="25" placeholder="再次输入密码" autocomplete="off" class="layui-input" isNeed="1" isSumit="0" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--这里是弹出框2的end-->
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" onclick="add()">新增</button>
+        <button class="layui-btn layui-btn-warm layui-btn-sm" data-lang="update" onclick="edit()">编辑</button>
+        <button class="layui-btn layui-btn-danger layui-btn-sm" onclick="del()">删除</button>
+        <button class="layui-btn layui-btn-normal layui-btn-sm" onclick="exportMethod()">导出</button>
+        <button class="layui-btn layui-btn-danger layui-btn-sm" onclick="resetPsw()">重置密码</button>
+    </div>
+</script>
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", ready);
+    function ready() {
+        internationalize();
+        return { langMaps: langMaps, langObj: langObj }; //将内部的变量
+    }
+    var langMaps = ready().langMaps;
+    var langObj = ready().langObj;
+    var gridColumnArray = [ //表头
+        { checkbox: true, field: "", title: "" }
+        , { field: 'userName', title: langMaps.userName, width: 120 }
+        , { field: 'realName', title: '真实名称', width: 120 }
+        , { field: 'roleName', title: '页面角色', width: 200 }
+        , { field: 'dataRoleName', title: '数据角色', width: 200 }
+        , { field: 'phone', title: langMaps.phone, width: 150 }
+        , { field: 'email', title: '邮箱', width: 150 }
+        , { field: 'orderNum', title: '排序', width: 150 }
+        //, { field: 'lastLoginTime', title: '最后登录时间', width: 150 }
+        , { field: 'createDate', title: '创建时间', width: 200 }
+        , { field: 'remarks', title: '备注' }
+        , { field: 'roleId', hide: true }
+        , { field: 'dataRoleId', hide: true }
+    ];
+    var layer, form, table, $, laydate;
+    layui.use(['layer', 'form', 'table', 'laydate'], function () {
+        layer = layui.layer;
+        form = layui.form;
+        table = layui.table;
+        $ = layui.$; laydate = layui.laydate;
+        //这里进行装载数据
+        initForm();
+    })
+    function renderSelect() {
+        //初始化
+        ajaxMethod("../api/webapiMain/get_sys_role", function (JsonArray) {
+            loadingFormSelect($("select[name='roleId']"), JsonArray, "roleId", "roleName");
+            form.render('select'); //刷新select选择框渲染
+        })
+        ajaxMethod("../api/webapiMain/get_sys_data_role", function (JsonArray) {
+            loadingFormSelect($("select[name='dataRoleId']"), JsonArray, "dataRoleId", "roleName");
+            form.render('select'); //刷新select选择框渲染
+        })
+    }
+    //这里初始化界面
+    function initForm() {
+        renderSelect();
+        //设定时间
+        laydate.render({
+            elem: '#beginDt' //指定元素
+            //, value: getCurrentAddDayYMD(-7) //必须遵循format参数设定的格式
+        });
+        laydate.render({
+            elem: '#endDt' //指定元素
+            //, value: getCurrentAddDayYMD(1) //必须遵循format参数设定的格式
+        });
+        form.render(); //刷新select选择框渲染
+        //这里渲染table
+        initGrid();
+        window.setTimeout(searchDb, 300);//延迟一下进行装载
+    }
+    function initGrid() {
+        table.render({
+            elem: '#mainTable'
+            , toolbar: "#toolbarDemo"
+            , height: 'full-130'
+            , data: []
+            , page: true //开启分页
+            , limits: [15, 30, 50, 100]
+            , limit: 15 //每页默认显示的数量
+            , cols: [gridColumnArray]
+        });
+    }
+    function searchDb() {
+        //这里获取信息
+        var divObject = $(".searchDivStyle");
+        var searchJsonArray = getJsonListSearchForm(divObject);
+        showConsoleLog(searchJsonArray);
+        var passJson = {};
+        passJson.centerSearchArray = searchJsonArray
+        ajaxMethodWithWaiting2("../api/webapiMain/getUserManger", passJson, function (JsonArray) {
+            layer.closeAll();//关闭所有的
+            table.render({
+                elem: '#mainTable'
+                , toolbar: "#toolbarDemo"
+                , height: 'full-130'
+                , data: JsonArray
+                , page: true //开启分页
+                , cols: [gridColumnArray]
+            });
+        })
+    }
+    function setDefaultValue() {
+        //设置默认值
+        $("input[name='orderNum']").val("1");
+    }
+    function add() {
+        //先清空页面
+        var divObject = $("#open_1_Div");
+        var ctrl_array = getJsonListOpenFormClearObject(divObject);
+        if (ctrl_array.length > 0) {
+            $.each(ctrl_array, function (i, obj) {
+                $(obj).val("");//进行清空
+            })
+            form.render("select");
+        }
+        setDefaultValue();
+        //这里弹出一个页面
+        confirmFormWithDivID("新增", "#open_1_Div"
+            , function (index, layero) {
+                //alert(index);
+                var vJsonArray = getJsonListOpenForm(divObject);
+                showConsoleLog(vJsonArray);
+                if (vJsonArray == undefined || vJsonArray.length <= 0) {
+                    showMsg(langMaps.noPageDataObtained);
+                    return;
+                }
+                //循环这个数组， 这里检测一下必输项是否填写
+                var msgTishi = langMaps.tips;
+                $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                    if (json.isNeed == "1" && json.fieldValue == "") {
+                        msgTishi += "<br>" + json.placeholder + langMaps.notFilledIn;
+                    }
+                });
+                if (msgTishi != langMaps.tips) {
+                    showMsg(msgTishi);
+                    return;
+                }
+                //这里进行提交数据
+                //这里比较特殊，需要比对密码是否一致
+                if ($("#open_1_Div input[name='psw']").val() != $("#open_1_Div input[name='pswAgain']").val()) {
+                    showMsg(langMaps.twoPasswordInconsistent);
+                    return;
+                }
+                var passJson = {};
+                $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                    passJson[json["fieldName"]] = json["fieldValue"];
+                });
+                showConsoleLog(vJsonArray);
+                var iWaiting = 0;
+                $.ajax({
+                    type: "post",
+                    url: "../api/webapiMain/userAdd",
+                    beforeSend: function () {
+                        iWaiting = layer.load(1);
+                    },
+                    data: passJson,
+                    success: function (data) {
+                        layer.close(iWaiting);//关闭等待的
+                        if (data.code == 100) {
+                            showMsg(langMaps.addSuccessFully);
+                            layer.close(index);
+                            searchDb();
+                        } else {
+                            showMsg(langMaps.addFailed + data.msg);
+                        }
+                    }
+                })
+            })
+    }
+    function edit() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        if (selectedRows.length == 1) {
+            //这里进行赋值
+            var divObject = $("#open_1_Div_edit");
+            var ctrl_array = getJsonListOpenFormClearObject(divObject);
+            if (ctrl_array.length > 0) {
+                $.each(ctrl_array, function (i, json) {
+                    var keyName = json.name;
+                    $(json).val(selectedRows[0][keyName]);
+                });
+                setTimeout(function () { form.render('select') }, 500);
+            }
+            //这里进行
+            confirmFormWithDivID(langMaps.update, "#open_1_Div_edit"
+                , function (index, layero) {
+                    //alert(index);
+                    var vJsonArray = getJsonListOpenForm(divObject);
+                    showConsoleLog(vJsonArray);
+                    if (vJsonArray == undefined || vJsonArray.length <= 0) {
+                        showMsg(langMaps.noPageDataObtained)
+                        return;
+                    }
+                    //循环这个数组， 这里检测一下必输项是否填写
+                    var msgTishi = langMaps.tips;
+                    $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                        if (json.isNeed == "1" && json.fieldValue == "") {
+                            msgTishi += "<br>" + json.placeholder + langMaps.notFilledIn;
+                        }
+                    });
+                    if (msgTishi != langMaps.tips) {
+                        showMsg(msgTishi);
+                        return;
+                    }
+                    //这里进行提交数据
+                    var passJson = {};
+                    $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                        passJson[json["fieldName"]] = json["fieldValue"];
+                    });
+                    showConsoleLog(vJsonArray);
+                    var iWaiting = 0;
+                    $.ajax({
+                        type: "post",
+                        url: "../api/webapiMain/userUpdate",
+                        beforeSend: function () {
+                            iWaiting = layer.load(1);
+                        },
+                        data: passJson,
+                        success: function (data) {
+                            layer.close(iWaiting);//关闭等待的
+                            if (data.code == 100) {
+                                showMsg(langMaps.addSuccessFully);
+                                layer.close(index);
+                                searchDb();
+                            }
+                            else {
+                                showMsg(langMaps.addFailed + data.msg);
+                            }
+                        }
+                    })
+                })
+        } else {
+            showMsg(langMaps.selectRowOperate);
+        }
+    }
+    function del() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        var iRowsLen = selectedRows.length;
+        if (iRowsLen > 0) {
+            layer.confirm(langObj.prop("deleteRow", iRowsLen), { icon: 3, title: langMaps.tips }, function (index) {
+                //do something
+                var useridList = "";
+                $.each(selectedRows, function (i, json) {
+                    if (useridList) {
+                        useridList += "," + json["userId"];
+                    }
+                    else {
+                        useridList = json["userId"];
+                    }
+                })
+                var passJson = {};
+                passJson.userIdList = useridList;
+                ajaxMethodWithWaiting2("../api/webapiMain/userDel", passJson, function (data) {
+                    if (data.code == 100) {
+                        showMsg(data.msg);
+                        searchDb();
+                    }else {
+                        showMsg(data.msg);
+                    }
+                })
+                layer.close(index);
+            });
+        }
+        else {
+            showMsg(langMaps.selectRowOperate);
+        }
+    }
+    function exportMethod() {
+        var iRowsLen = $("div[lay-id='mainTable'] .layui-table-body  tr").length
+        if (iRowsLen <= 0) {
+            showMsg(langMaps.queryBeforeExporting);
+            return;
+        }
+        layer.confirm(langObj.prop("exportRow", iRowsLen), { icon: 3, title: langMaps.tips }, function (index) {
+            layer.close(index);
+            var url = "../api/export/publicExport";
+            var passJson = {
+                keyName: "getUserManger",
+                columnArray: gridColumnArray,
+                fileName: "用户数据导出"
+            };
+            $.fileDownload(url, {
+                httpMethod: 'post',
+                data: passJson,
+                prepareCallback: function (url) {
+                    showMsg(langMaps.loading);
+                }, successCallback: function (url) {
+                    showMsg(langMaps.importSucceeded);
+                }, failCallback: function (html, url) {
+                    showMsg(html);
+                }
+            });
+        });
+    }
+    function resetPsw() {
+        var checkStatus = table.checkStatus('mainTable'); //mainTable 即为基础参数 id 对应的值
+        var selectedRows = checkStatus.data; //获取选中行的数据
+        if (selectedRows.length == 1) {
+            //这里进行赋值
+            var divObject = $("#open_2_Div");
+            var ctrl_array = getJsonListOpenFormClearObject(divObject);
+            if (ctrl_array.length > 0) {
+                $.each(ctrl_array, function (i, json) {
+                    var keyName = json.name;//
+                    $(json).val(selectedRows[0][keyName]);
+                });
+                form.render("select");
+            }
+            //这里进行
+            confirmFormWithDivID(langMaps.update, "#open_2_Div"
+                , function (index, layero) {
+                    //alert(index);
+                    var vJsonArray = getJsonListOpenForm(divObject);
+                    showConsoleLog(vJsonArray);
+                    if (vJsonArray == undefined || vJsonArray.length <= 0) {
+                        showMsg(langMaps.noPageDataObtained)
+                        return;
+                    }
+                    //循环这个数组， 这里检测一下必输项是否填写
+                    var msgTishi = langMaps.tips;
+                    $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                        if (json.isNeed == "1" && json.fieldValue == "") {
+                            msgTishi += "<br>" + json.placeholder + langMaps.notFilledIn;
+                        }
+                    });
+                    if (msgTishi != langMaps.tips) {
+                        showMsg(msgTishi);
+                        return;
+                    }
+                    //这里进行提交数据
+                    //这里比较特殊，需要比对密码是否一致
+                    if ($("#open_2_Div input[name='psw']").val() != $("#open_2_Div input[name='pswAgain']").val()) {
+                        showMsg(langMaps.twoPasswordInconsistent);
+                        return;
+                    }
+                    var passJson = {};
+                    $.each(vJsonArray, function (i, json) { //两个参数，第一个参数表示遍历的数组的下标，第二个参数表示下标对应的值
+                        passJson[json["fieldName"]] = json["fieldValue"];
+                    });
+                    var iWaiting = 0;
+                    $.ajax({
+                        type: "post",
+                        url: "../api/webapiMain/resetPsw",
+                        beforeSend: function () {
+                            iWaiting = layer.load(1);
+                        },
+                        data: passJson,
+                        success: function (data) {
+                            layer.close(iWaiting);//关闭等待的
+                            if (data.code == 100) {
+                                showMsg(langMaps.resetSucceessFul);
+                                layer.close(index);
+                                searchDb();
+                            } else {
+                                showMsg(langMaps.resetFailed + data.msg);
+                            }
+                        }
+                    })
+                })
+        }
+        else {
+            showMsg(selectRowOperate);
+        }
+    }
+</script>

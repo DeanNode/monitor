@@ -1,0 +1,46 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>数据权限</title>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+
+</head>
+<body>
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="background-color:#ffffff;">
+        <ul class="layui-tab-title">
+            <li class="layui-this">数据权限管理</li>
+            <li>数据权限分配</li>
+        </ul>
+        <div class="layui-tab-content">
+            <iframe  src="../systemTree/kong" style="width:100%;min-height:600px;border:0px;" ></iframe>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    var urlArray = [
+        { url: "dataRole_manger" }, { url: "dataRole_feipei" }
+    ];
+    layui.use(['layer', 'element'], function () {
+        var element = layui.element;
+        var $ = layui.$;
+        
+        $("iframe").attr("src", urlArray[0]["url"]);
+        element.on('tab(docDemoTabBrief)', function (data) {
+            console.log(this); //当前Tab标题所在的原始DOM元素
+            console.log(data.index); //得到当前Tab的所在下标
+            console.log(data.elem); //得到当前的Tab大容器
+            $("iframe").attr("src", urlArray[data.index]["url"]);
+
+        });
+    })
+
+</script>

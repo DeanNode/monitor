@@ -1,0 +1,125 @@
+{
+	"id": "0a21ae19-1563-4ea4-83eb-ab6c36a6575f",
+	"name": "分析后台",
+	"description": null,
+	"auth": null,
+	"events": null,
+	"variables": [],
+	"order": [
+		"6d5750ae-571d-4bfc-a245-88405cdb9c0a",
+		"6ceaed44-0394-4d8d-a2b6-b895ac71a54f",
+		"71284ffa-abe5-4722-b210-bbd8497d86e7",
+		"020f5671-371b-401e-addf-c7e7a4635bef",
+		"a8fcfe04-f523-496a-aa90-c150a9e97544"
+	],
+	"folders_order": [],
+	"protocolProfileBehavior": {},
+	"folders": [],
+	"requests": [
+		{
+			"id": "020f5671-371b-401e-addf-c7e7a4635bef",
+			"name": "删除组织",
+			"url": "http://localhost:60709/api/webapi_base/delElement",
+			"description": "",
+			"data": [],
+			"dataOptions": {
+				"raw": {
+					"language": "json"
+				}
+			},
+			"dataMode": "raw",
+			"headerData": null,
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": null,
+			"folder": null,
+			"rawModeData": "{\r\n    \"idList\":\"14\"\r\n}",
+			"pathVariables": {}
+		},
+		{
+			"id": "6ceaed44-0394-4d8d-a2b6-b895ac71a54f",
+			"name": "创建新组织节点",
+			"url": "http://localhost:60709/api/webapi_base/addElement",
+			"description": "",
+			"data": [],
+			"dataOptions": {
+				"raw": {
+					"language": "json"
+				}
+			},
+			"dataMode": "raw",
+			"headerData": null,
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": null,
+			"folder": null,
+			"rawModeData": "",
+			"pathVariables": {}
+		},
+		{
+			"id": "6d5750ae-571d-4bfc-a245-88405cdb9c0a",
+			"name": "获得组织结构",
+			"url": "http://localhost:60709/api/webapi_base/getCombination",
+			"description": "",
+			"data": null,
+			"dataOptions": null,
+			"dataMode": null,
+			"headerData": null,
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": null,
+			"folder": null,
+			"pathVariables": {}
+		},
+		{
+			"id": "71284ffa-abe5-4722-b210-bbd8497d86e7",
+			"name": "更新组织节点",
+			"url": "http://localhost:60709/api/webapi_base/editElement",
+			"description": "",
+			"data": [],
+			"dataOptions": {
+				"raw": {
+					"language": "json"
+				}
+			},
+			"dataMode": "raw",
+			"headerData": null,
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": null,
+			"folder": null,
+			"rawModeData": "{\r\n     \"id\":14,\r\n     \"departmentName\":\"总务部\",\r\n     \"pId\":2\r\n}\r\n",
+			"pathVariables": {}
+		},
+		{
+			"id": "a8fcfe04-f523-496a-aa90-c150a9e97544",
+			"name": "员工登陆",
+			"url": "http://localhost:60709/api/webapiMain/login_employee",
+			"description": "",
+			"data": [],
+			"dataOptions": {
+				"raw": {
+					"language": "json"
+				}
+			},
+			"dataMode": "raw",
+			"headerData": null,
+			"method": "POST",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": null,
+			"folder": null,
+			"rawModeData": "{\r\n\t\"account\":\"18653560631\",\r\n\t\"psw\":1\r\n}",
+			"pathVariables": {}
+		}
+	]
+}

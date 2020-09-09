@@ -1,0 +1,281 @@
+{
+	"info": {
+		"_postman_id": "db166e2e-8e95-4f19-af33-ecba58413d9d",
+		"name": "监控",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "按时间范围统计键盘数量，支持按多种部门别统计",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"level\":0,\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getKeyboardTotalByTime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getKeyboardTotalByTime"
+					]
+				},
+				"description": "按时间段查询键盘数"
+			},
+			"response": []
+		},
+		{
+			"name": "按时间范围统计鼠标数量",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"level\":0,\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getMouseTotalByTime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getMouseTotalByTime"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "常用软件排行榜（top10）",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getAppCharts",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getAppCharts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "当前在用的app（top10)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getAppNow",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getAppNow"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "时刻工作量对比",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"level\":2,\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getWorkGroupByHour",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getWorkGroupByHour"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "按时间范围统计效率",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"level\":2,\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getEfficiencyGroupByHour",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getEfficiencyGroupByHour"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "按时间范围统计粘贴次数",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"level\":2,\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-16\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getPasteTotalByTime",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getPasteTotalByTime"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "复制关系排行",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userIdList\":\"453,454,455,30\",\r\n    \"top\":10,\r\n    \"timeBegin\":\"2020-8-13\",\r\n    \"timeEnd\":\"2020-8-16\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getContentRely",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getContentRely"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "时间范围内每日工作量变化趋势",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userId\":453,\r\n    \"timeRange\":\"2020-8-15~2020-8-17\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:60709/api/webapi_baobiao/getRangeDayWorkloadState",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "60709",
+					"path": [
+						"api",
+						"webapi_baobiao",
+						"getRangeDayWorkloadState"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

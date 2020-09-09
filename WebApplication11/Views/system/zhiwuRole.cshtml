@@ -1,0 +1,288 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>职位权限分配</title>
+    <link href="~/lib/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/lib/layui/layui.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+
+    <link href="~/lib/jiudianFont/iconfont.css" rel="stylesheet" />
+
+
+</head>
+<body>
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-md3" style="border:0px solid red;height:550px">
+                <div class="layui-card">
+                    <div class="layui-card-header"><i class="iconfont">&#xe631;</i>职位</div>
+                    <div class="layui-card-body">
+                        <iframe id="iframe1" src="../systemTree/kong" style="width:100%;height:600px;border:0px" frameborder=0></iframe>
+
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3" style="border:0px solid blue;height:550px">
+                <div class="layui-card">
+                    <div class="layui-card-header"><i class="iconfont">&#xe631;</i>系统页面权限</div>
+                    <div class="layui-card-body" style="height:600px;">
+
+                        <iframe id="iframe2" src="../systemTree/kong" style="width:100%;height:500px;border:0px" frameborder=0></iframe>
+
+                        <div style="position:absolute;bottom:15px;right:15px;">
+                            <div class="layui-btn" onclick="saveZhiwuPageInfo()"><i class="iconfont">&#xe660;</i>立即保存</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3" style="border:0px solid blue;height:550px">
+                <div class="layui-card">
+                    <div class="layui-card-header"><i class="iconfont">&#xe631;</i>手机页面权限</div>
+                    <div class="layui-card-body" style="height:600px;">
+
+                        <iframe id="iframe3" src="../systemTree/kong" style="width:100%;height:500px;border:0px" frameborder=0></iframe>
+
+                        <div style="position:absolute;bottom:15px;right:15px;">
+                            <div class="layui-btn" onclick="saveMobilePageInfo()"><i class="iconfont">&#xe660;</i>立即保存</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md3" style="border:0px solid blue;height:550px">
+                <div class="layui-card">
+                    <div class="layui-card-header"><i class="iconfont">&#xe631;</i>查看预警权限</div>
+                    <div class="layui-card-body" style="height:600px;">
+
+                        <iframe id="iframe4" src="../systemTree/kong" style="width:100%;height:500px;border:0px" frameborder=0></iframe>
+
+                        <div style="position:absolute;bottom:15px;right:15px;">
+                            <div class="layui-btn" onclick="saveWarnInfo()"><i class="iconfont">&#xe660;</i>立即保存</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</body>
+</html>
+
+
+<script>
+    var layer;
+    layui.use(['layer'], function () {
+        layer = layui.layer;
+
+        $("#iframe1").attr("src", "../systemTree/userZhiwuTree");
+        $("#iframe2").attr("src", "../systemTree/sysPageTree");
+        $("#iframe3").attr("src", "../systemTree/mobilePageTree");
+        $("#iframe4").attr("src", "../systemTree/systemWarnTree");
+    })
+
+    function searchMyRolePages(vRoleId) {
+        //layer.msg(vRoleId);
+        //这里查询一下
+        if (vRoleId) {
+            $.ajax({
+                url: "../api/webapiMain/getSelectItem?tableName=sys_zhiwu_function&fieldKey=zhiwuId&fieldValue=" + vRoleId + "&checkDataRole=1",
+                dataType: "json",
+                success: function (data) {
+                    //alert(111);
+                    
+                    var treeObj = iframe2.contentWindow.treeObj;
+                    treeObj.checkAllNodes(false);
+
+                    //alert(JSON.stringify(data));
+
+                    $.each(data, function (i, json) {
+                        var node = treeObj.getNodeByParam("id", "B" + json["functionId"], null);
+                        if (node) {
+                            treeObj.checkNode(node, true, true);
+                        }
+                    })
+
+                }
+            })
+
+            $.ajax({
+                url: "../api/webapiMain/getSelectItem?tableName=sys_mobile_zhiwu_function&fieldKey=zhiwuId&fieldValue=" + vRoleId + "&checkDataRole=1",
+                dataType: "json",
+                success: function (data) {
+                    //alert(111);
+
+                    var treeObj = iframe3.contentWindow.treeObj;
+                    treeObj.checkAllNodes(false);
+
+                    //alert(JSON.stringify(data));
+
+                    $.each(data, function (i, json) {
+                        var node = treeObj.getNodeByParam("id", "B" + json["mobileFunctionId"], null);
+                        if (node) {
+                            treeObj.checkNode(node, true, true);
+                        }
+                    })
+
+                }
+            })
+
+            var treeObj = iframe4.contentWindow.treeObj;
+            treeObj.checkAllNodes(false);
+            $.ajax({
+                url: "../api/webapiMain/getSelectItem?tableName=sys_zhiwu_warn&fieldKey=zhiwuId&fieldValue=" + vRoleId + "&fieldKey1=globalFlag&fieldValue1=0&checkDataRole=0",
+                dataType: "json",
+                success: function (data) {
+
+                    $.each(data, function (i, json) {
+                        var node = treeObj.getNodeByParam("id", "B" + json["warnTypeId"], null);
+                        if (node) {
+                            treeObj.checkNode(node, true, true);
+                        }
+                    })
+
+                }
+            })
+            $.ajax({
+                url: "../api/webapiMain/getSelectItem?tableName=sys_zhiwu_warn&fieldKey=zhiwuId&fieldValue=" + vRoleId + "&fieldKey1=globalFlag&fieldValue1=1&checkDataRole=0",
+                dataType: "json",
+                success: function (data) {
+
+                    $.each(data, function (i, json) {
+                        var node = treeObj.getNodeByParam("id", "C" + json["warnTypeId"], null);
+                        if (node) {
+                            treeObj.checkNode(node, true, true);
+                        }
+                    })
+
+                }
+            })
+        }
+    }
+
+    function saveZhiwuPageInfo() {
+        var zhiwuId = iframe1.contentWindow.getSelectZhiwuId();
+        layer.msg(zhiwuId);
+        if (!zhiwuId) {
+            layer.msg("请先选择左侧职务!");
+            return;
+        }
+
+        var functionIdList = iframe2.contentWindow.getCheckedFunctionIdList();
+        if (!functionIdList) {
+            layer.msg("请先勾选页面权限!");
+            return;
+        }
+        layer.confirm('确定要保存权限吗？', { icon: 3, title: '提示' }, function (index) {
+
+            var vIndex = 0;
+            var passData = {};
+            passData.zhiwuId = zhiwuId;
+            passData.functionIdList = functionIdList;
+            $.ajax({
+                type: "post",
+                url: "../api/webapi_tree/saveZhiwuPageRole",
+                data: passData,
+                dataType: "json",
+                beforeSend: function () {
+                    vIndex = layer.load();
+                },
+                success: function (data) {
+                    layer.close(vIndex);
+                    if (data.code == 100) {
+                        layer.alert("保存成功!");
+                    }
+                    else {
+                        layer.alert("保存失败!" + data.msg);
+                    }
+                }
+            })
+        });
+
+    }
+
+    function saveMobilePageInfo() {
+        var zhiwuId = iframe1.contentWindow.getSelectZhiwuId();
+        layer.msg(zhiwuId);
+        if (!zhiwuId) {
+            layer.msg("请先选择左侧职务!");
+            return;
+        }
+
+        var functionIdList = iframe3.contentWindow.getCheckedFunctionIdList();
+        if (!functionIdList) {
+            layer.msg("请先勾选手机端页面权限!");
+            return;
+        }
+        layer.confirm('确定要保存权限吗？', { icon: 3, title: '提示' }, function (index) {
+            var vIndex = 0;
+            var passData = {};
+            passData.zhiwuId = zhiwuId;
+            passData.functionIdList = functionIdList;
+            $.ajax({
+                type: "post",
+                url: "../api/webapi_tree/saveZhiwuMobilePageRole",
+                data: passData,
+                dataType: "json",
+                beforeSend: function () {
+                    vIndex = layer.load();
+                },
+                success: function (data) {
+                    layer.close(vIndex);
+                    if (data.code == 100) {
+                        layer.alert("保存成功!");
+                    }
+                    else {
+                        layer.alert("保存失败!" + data.msg);
+                    }
+                }
+            })
+        });
+
+    }
+
+    function saveWarnInfo() {
+        var zhiwuId = iframe1.contentWindow.getSelectZhiwuId();
+        layer.msg(zhiwuId);
+        if (!zhiwuId) {
+            layer.msg("请先选择左侧角色!");
+            return;
+        }
+
+        var functionIdList = iframe4.contentWindow.getCheckedFunctionIdList();
+        if (!functionIdList) {
+
+            layer.msg("请先勾选中间页面权限!");
+            return;
+        }
+        layer.confirm('确定要保存权限吗？', { icon: 3, title: '提示' }, function (index) {
+            var vIndex = 0;
+            var passData = {};
+            passData.zhiwuId = zhiwuId;
+            passData.functionIdList = functionIdList;
+            $.ajax({
+                type: "post",
+                url: "../api/webapi_tree/saveZhiwuWarnTypeRole",
+                data: passData,
+                dataType: "json",
+                beforeSend: function () {
+                    vIndex = layer.load();
+                },
+                success: function (data) {
+                    layer.close(vIndex);
+                    if (data.code == 100) {
+                        layer.alert("保存成功!");
+                    }
+                    else {
+                        layer.alert("保存失败!" + data.msg);
+                    }
+                }
+            })
+        });
+    }
+
+</script>

@@ -1,0 +1,339 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>下载用户信息</title>
+    @*<link href="~/Scripts/mainShow/css/css0.css" rel="stylesheet" />*@
+    <link href="~/Scripts/layui/css/layui.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/dtree.css" rel="stylesheet" />
+    <link href="~/Scripts/layui_ext/dtree/font/dtreefont.css" rel="stylesheet" />
+    <script src="~/Scripts/layui/layui.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script language="JavaScript" src="~/lib/i18n/jquery.i18n.properties.min.js"></script>
+    <script src="~/Scripts/echarts.min5.js"></script>
+    <script src="~/Scripts/public.js"></script>
+    <script src="~/Scripts/layui/xm-select.js"></script>
+    <script src="~/Scripts/jquery.fileDownload.js"></script>
+    <style>
+        .layui-form-select dl {
+            z-index: 9999;
+        }
+        .showAppDiv {
+            height: 40px;
+            color: white;
+            line-height: 40px;
+            border-bottom: 1px dotted #575353;
+        }
+        .showAppDiv span {
+            color: #a4a4a4;
+        }
+        #selectUserTree_select_input_id {
+            background-color: #E8E8E8;
+        }
+        .dtree-select-show {
+            background-color: #E8E8E8;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-container" style="background-color:#ffffff;width:inherit;height:inherit;">
+        <blockquote class="layui-elem-quote layui-form searchDivStyle" style="height:35px; text-align:right">
+            <div class="layui-form-item" style="height:35px;width:auto;right:1px;text-align:left">
+                <label class="layui-form-label" style="width:80px;">信息类型：</label>
+                <div class="layui-input-inline" style="width:130px;text-align:left;z-index:999999">
+                    <select id="selectType">
+                        <option value="all">全部信息</option>
+                        <option value="keyboard">键盘信息</option>
+                        <option value="mouse">鼠标信息</option>
+                        <option value="special">粘贴板信息</option>
+                        <option value="pages">界面信息</option>
+                    </select>
+                </div>
+
+                <label class="layui-form-label" style="width:80px;">员工选择：</label>
+                <div class="layui-input-inline" style="width:300px;text-align:left;z-index:999999;">
+                    <ul id="selectUserTree" class="dtree" data-id="0" style="background-color:#E8E8E8;"></ul>
+                </div>
+                <label class="layui-form-label" style="width:60px;">时间段：</label>
+                <div class="layui-input-inline" style="width:200px;">
+                    <input type="text" class="layui-input" id="txtDateTimeArea" style="background-color:#E8E8E8">
+                </div>
+                <div type="button" id="btnSearch" class="layui-btn layui-btn-normal">查询</div>
+            </div>
+        </blockquote>
+        <table class="layui-hide" id="mainTable" lay-filter="mainTable"></table>
+        <!--这里是配置表格end-->
+        <!--这里保持预留项目的begin-->
+        <form id="form1" runat="server">
+            <div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-normal layui-btn-sm" onclick="exportMethod()">导出</button>
+    </div>
+</script>
+<script>   
+    var layer, form, table, $, laydate;
+    var layer, laydate;
+    var chart1, chart2, chart3, chart4, chart5, chart6;
+    var select_userInfo;
+    var dtree;
+    var gridColumnArray;
+    document.addEventListener("DOMContentLoaded", ready);
+    function ready() {
+        internationalize();
+        var gridColumnArray = [ //表头
+            , { field: 'type', title: langMaps.messageType, width: 120, sort: true, }
+            , { field: 'userName', title: langMaps.userName, width: 120, sort: true }
+            //, { field: 'MachineName', title: '计算机名称', width: 200, sort: true }
+            , { field: 'appName', title: langMaps.appName, width: 200, sort: true }
+            , { field: 'windowTitle', title: langMaps.window, width: 400, sort: true }
+            , { field: 'inputText', title: langMaps.numberHits, width: 300 }
+            , { field: 'usedSeconds', title: langMaps.usageSeconds, width: 150, sort: true }
+            , { field: 'createDate', title: '发生时间', width: 200, sort: true }
+            , { field: 'text', title: '文本内容', width: 200, sort: true }
+        ]; 
+        layui.use(['layer', 'form', 'table', 'laydate'], function () {
+            layer = layui.layer;
+            form = layui.form;
+            table = layui.table;
+            laydate = layui.laydate;
+            $ = layui.$;
+            //select 事件
+            //这里进行装载数据
+            initForm();
+        });
+        return gridColumnArray;
+    }
+    gridColumnArray = ready();
+    console.log(gridColumnArray);
+    $(window).load(function () {
+        $(".loading").fadeOut()
+    });
+  
+
+    //这里初始化界面
+    function initForm() {
+        form.render(); //刷新select选择框渲染
+
+        initGrid();
+        //这里渲染table
+       // window.setTimeout(searchDb, 300);//延迟一下进行装载
+    }
+    //让grid先显示一下
+    function initGrid() {
+        table.render({
+            elem: '#mainTable'
+            , toolbar: "#toolbarDemo"
+            , height: 'full-100'
+            , data: []
+            , page: true //开启分页
+            , limits: [100,200,500,800]
+            , limit: 100 //每页默认显示的数量
+            , cols: [gridColumnArray]
+        });
+    }
+
+    var public_color_array = ["#27D08A", "#3092FF", "#27D08A", "#e3e31f", "#ff7400", ""];
+
+    $(document).ready(function () {
+        var whei = $(window).width();
+        $("html").css({
+            fontSize: whei / 20
+        });
+        $(window).resize(function () {
+            var whei = $(window).width();
+            $("html").css({
+                fontSize: whei / 20
+            })
+        });
+    });
+
+
+    layui.extend({
+        dtree: '../Scripts/layui_ext/dtree/dtree'   // {/}的意思即代表采用自有路径，即不跟随 base 路径
+    }).use(['layer', 'laydate', 'dtree'], function () {
+        layer = layui.layer;
+        laydate = layui.laydate;
+        dtree = layui.dtree
+
+
+        //执行一个laydate实例
+        var lastDate = getCurrentAddDayYMD(-7);
+        var curDate = getCurrentAddDayYMD(0);
+        laydate.render({
+            elem: '#txtDateTimeArea' //指定元素
+            , range: "~"
+            , max: 0
+            , value: lastDate + " ~ " + curDate
+            , done: function (value, date, endDate) {
+                //console.log(value); //得到日期生成的值，如：2017-08-18
+                //console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+                //console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+            }
+        });
+
+
+        var waitIndex = 0;
+        $.ajax({
+            url: "../api/data2020/getUserTree",
+            dataType: "json",
+            beforeSend: function () {
+                waitIndex = layer.load(1);
+            },
+            success: function (dt) {
+                layer.close(waitIndex);
+                public_tree_array = dt;//这里进行赋值
+                SelTree6 = dtree.renderSelect({
+                    elem: "#selectUserTree",
+                    width: "100%", // 指定树的宽度
+                    menubar: true,
+                    menubarTips: {
+                        group: ["moveDown", "moveUp", "refresh", "searchNode"]
+                    },
+                    data: dt, // 使用data加载
+                    selectTips: langMaps.selectContrast,
+                    dataFormat: "list",  //配置data的风格为list
+                    checkbarType: "p-casc",
+                    checkbar: false, //开启复选框
+                    done: function (res, $ul, first) {
+                        if (first) {
+                            //$(".dtree-nav-div").attr("dtree-click", "");
+                            //$(".t-click ").on("click", function () {
+                            //    console.log($(this).attr("data-id"));
+                            //});
+                            //然后把所有非用户的限定不可选择
+                            var userIdArry = [];
+                            $.each(public_tree_array, function (i, json) {
+                                if (json["type"] != "user") {
+                                    userIdArry.push(json["id"].toString());
+                                }
+                            })
+                            SelTree6.setDisabledNodes(userIdArry);
+                        }
+                    }
+                });
+            }
+        });
+        $("#btnSearch").click(function () {
+            var timequjian = $("#txtDateTimeArea").val();
+            if (!timequjian) {
+                layer.alert("请选择查询时间范围!");
+                return;
+            }
+            var selectType = $("#selectType").val();
+
+            var param = dtree.getNowParam(SelTree6);
+            if (JSON.stringify(param) == "{}") {
+
+                layer.alert(langMaps.selectContrast);
+                return;
+            }
+            var userIdList = param["nodeId"];
+            if (userIdList == "") {
+                layer.alert(langMaps.selectContrast);
+                return;
+            }
+            userIdList = userIdList.substring(1);//获取这个用户的id
+            searchDb(selectType,timequjian, userIdList);
+        })
+        var bodyHeight = $("body").height();
+        $(".boxall").height((bodyHeight - 50) / 2);
+    })
+    function getTreeUserIdList() {
+        var userIdList = "";
+        var param = dtree.getCheckbarNodesParam("selectUserTree");
+        if (param.length > 0) {
+            $.each(param, function (i, obj) {
+                var id = obj["nodeId"].toString();
+                if (id.substring(0, 1) == "U") {
+                    if (userIdList == "") {
+                        userIdList = id.substring(1);
+                    }
+                    else {
+                        userIdList += "," + id.substring(1);
+                    }
+                }
+            })
+        }
+        return userIdList;
+    }
+    function searchDb(selectType,timeQujian, userIdList) {
+        //这里获取信息
+        var passJson = {};
+        passJson.timeQujian = timeQujian;
+        passJson.userIdList = userIdList;
+        passJson.type = selectType;
+        ajaxMethodWithWaiting2("../api/webapi_download/getUserHistoryDataList", passJson, function (JsonArray) {
+            layer.closeAll();//关闭所有的
+            public_rows_count = JsonArray.length;
+            table.render({
+                elem: '#mainTable'
+                , toolbar: "#toolbarDemo"
+                , height: 'full-100'
+                , data: JsonArray
+                , page: true //开启分页
+                , limits: [100, 200, 500, 800]
+                , limit: 100 //每页默认显示的数量
+                , cols: [gridColumnArray]
+                , done: function (res, curr, count) {
+                    //这里进行把列颜色标识一下
+                    for (var i = 0; i < res.data.length; i++) {
+                        var type = res.data[i]["type"];
+                        var color = "#E4F7E4";
+                        if (type == "键盘") {
+                            color = "#DFF4EF";
+                        }
+                        else if (type == "鼠标") {
+                            color = "#D0CFF3";
+                        }
+                        else if (type == "粘贴板") {
+                            color = "#F2DBF7";
+                        }
+                        else {
+                            color = "#E4F7E4";
+                        }
+                        $("tr").eq(i+1).css("background-color", color);
+                    }
+                }
+            });
+        })
+    }
+
+    var public_rows_count = 0;
+    function exportMethod() {
+
+        if (public_rows_count <= 0) {
+            showMsg(langMap.queryBeforeExporting);
+            return;
+        }
+        layer.confirm('确定要导出[' + public_rows_count + ']条记录吗？', { icon: 3, title: langMaps.tips }, function (index) {
+            layer.close(index);
+            var url = "../api/export/publicExport";
+            var passJson = {
+                keyName: "getUserHistoryDataList",
+                columnArray: gridColumnArray,
+                fileName: "导出全部操作信息"
+            };
+            $.fileDownload(url, {
+                httpMethod: 'post',
+                data: passJson,
+                prepareCallback: function (url) {
+                    //alert("正在导出,请稍后...");
+                    showMsg(langMaps.loading);
+                },
+                successCallback: function (url) {
+                    showMsg("导入成功！");
+                },
+                failCallback: function (html, url) {
+                    showMsg(html);
+                }
+            });
+        });
+    }
+</script>
